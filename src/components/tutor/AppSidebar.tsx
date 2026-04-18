@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, History as HistoryIcon, Plus, Sparkles, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Clock, History as HistoryIcon, LogIn, LogOut, Plus, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useGamification } from "@/hooks/useGamification";
+import { supabase } from "@/integrations/supabase/client";
 import type { FriendUpdate, HistoryItem } from "@/lib/tutor/mockData";
 
 interface Props {
