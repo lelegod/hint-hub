@@ -16,6 +16,7 @@ interface Props {
 
 export function AppSidebar({ history, friends, onNewSession }: Props) {
   const isMobile = useIsMobile();
+  const { authed } = useGamification();
   // On mobile and tablet, default to collapsed (mini) so the chat gets max room.
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<"history" | "friends">("history");
