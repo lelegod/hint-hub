@@ -181,6 +181,24 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
               </ul>
             )}
           </div>
+
+          {/* Auth row */}
+          <div className="border-t border-sidebar-border px-3 py-3">
+            {authed ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-muted-foreground"
+                onClick={() => supabase.auth.signOut()}
+              >
+                <LogOut className="h-4 w-4" /> Sign out
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="w-full justify-start gap-2">
+                <Link to="/auth"><LogIn className="h-4 w-4" /> Sign in to track XP</Link>
+              </Button>
+            )}
+          </div>
         </>
       )}
     </aside>
