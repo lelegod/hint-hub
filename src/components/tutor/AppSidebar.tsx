@@ -181,7 +181,7 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession }: Pr
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-3">
-            {tab === "history" && <HistoryList history={history} />}
+            {tab === "history" && <HistoryList history={history} onOpen={onOpenSession} />}
             {tab === "friends" && (
               <div className="space-y-4">
                 {authed && (
@@ -264,7 +264,7 @@ function TabButton({
   );
 }
 
-function HistoryList({ history }: { history: HistoryItem[] }) {
+function HistoryList({ history, onOpen }: { history: HistoryItem[]; onOpen: (id: string) => void }) {
   if (history.length === 0) {
     return (
       <div className="rounded-md border border-dashed border-sidebar-border p-4 text-center text-xs text-muted-foreground">
