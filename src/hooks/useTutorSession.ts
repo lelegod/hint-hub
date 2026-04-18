@@ -420,6 +420,32 @@ export function useTutorSession() {
     }
   }, [problemSummary, sourceSummary, extraSummary, hints, files]);
 
+  // ----- Match mini-game (sidebar tab) -----
+  const startMatchGame = useCallback(async () => {
+    setErrorMsg(null);
+    setPreviousStatus(status);
+    setStatus("match_game");
+    setMatch(null);
+    try {
+      const result = await fetchMatchGame({
+        problemSummary,
+        sourceSummary,
+        extraSummary,
+        previousHints: hints.map((h) => h.challenge.hint),
+        attachments: buildAttachments(files),
+      });
+      setMatch(result);
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Failed to load match game");
+      setStatus(previousStatus);
+    }
+  }, [problemSummary, sourceSummary, extraSummary, hints, files, status, previousStatus]);
+
+  const closeMatchGame = useCallback(() => {
+    setMatch(null);
+    setStatus(previousStatus === "match_game" ? "setup" : previousStatus);
+  }, [previousStatus]);
+
   // ----- Load an existing session from DB (resume or view) -----
   const loadSession = useCallback(async (id: string) => {
     setErrorMsg(null);
