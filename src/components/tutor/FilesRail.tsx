@@ -33,10 +33,10 @@ export function FilesRail({ session }: Props) {
       <button
         type="button"
         onClick={() => setMobileVisible(true)}
-        className="fixed right-2 top-1/2 z-30 flex h-10 w-7 -translate-y-1/2 items-center justify-center rounded-l-md border border-r-0 border-border bg-card/90 text-muted-foreground shadow-soft backdrop-blur hover:text-foreground"
+        className="fixed right-0 top-1/2 z-30 flex h-12 w-4 -translate-y-1/2 items-center justify-center rounded-l-md border border-r-0 border-border bg-card/80 text-muted-foreground backdrop-blur transition-colors hover:bg-card hover:text-foreground"
         aria-label="Show files panel"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-3 w-3" />
       </button>
     );
   }
@@ -54,32 +54,33 @@ export function FilesRail({ session }: Props) {
         widthClass,
       )}
     >
-      <button
-        type="button"
-        onClick={() => {
-          if (isMobile && filesOpen) {
-            // On mobile, collapsing from open should fully hide the rail again
+      {!filesOpen ? (
+        <button
+          type="button"
+          onClick={() => setFilesOpen(true)}
+          aria-label="Expand files panel"
+          className="absolute right-full top-1/2 z-20 flex h-12 w-4 -translate-y-1/2 items-center justify-center rounded-l-md border border-r-0 border-border bg-card/80 text-muted-foreground backdrop-blur transition-colors hover:bg-card hover:text-foreground"
+        >
+          <ChevronLeft className="h-3 w-3" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            if (isMobile) {
+              setFilesOpen(false);
+              setMobileVisible(false);
+              return;
+            }
             setFilesOpen(false);
-            setMobileVisible(false);
-            return;
-          }
-          setFilesOpen((o) => !o);
-        }}
-        className={cn(
-          "flex items-center gap-2 px-2 py-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40",
-          filesOpen ? "justify-between px-3" : "justify-center",
-        )}
-        aria-label={filesOpen ? "Collapse files panel" : "Expand files panel"}
-      >
-        {filesOpen ? (
-          <span className="flex items-center gap-2">
-            <ChevronRight className="h-4 w-4 rotate-180 text-muted-foreground" />
-            <span className="font-serif text-base">Files</span>
-          </span>
-        ) : (
-          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
+          }}
+          className="flex items-center justify-between gap-2 px-3 py-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+          aria-label="Collapse files panel"
+        >
+          <span className="font-serif text-base">Files</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
+      )}
 
       {filesOpen && (
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 pb-4">
