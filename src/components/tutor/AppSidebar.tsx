@@ -277,27 +277,30 @@ function HistoryList({ history, onOpen }: { history: HistoryItem[]; onOpen: (id:
       {history.map((h) => {
         const active = h.status === "active";
         return (
-          <li
-            key={h.id}
-            className={cn(
-              "rounded-md border bg-sidebar p-3 text-sm transition-colors hover:border-primary/40",
-              active ? "border-primary/40" : "border-sidebar-border",
-            )}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="line-clamp-2 flex-1 font-medium text-sidebar-foreground">{h.title}</div>
-              {active && (
-                <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                  Active
-                </span>
+          <li key={h.id}>
+            <button
+              type="button"
+              onClick={() => onOpen(h.id)}
+              className={cn(
+                "w-full rounded-md border bg-sidebar p-3 text-left text-sm transition-colors hover:border-primary/40 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active ? "border-primary/40" : "border-sidebar-border",
               )}
-            </div>
-            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>{h.hintsUsed} hints</span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" /> {h.completedAt}
-              </span>
-            </div>
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="line-clamp-2 flex-1 font-medium text-sidebar-foreground">{h.title}</div>
+                {active && (
+                  <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                    Active
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{h.hintsUsed} hints</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> {h.completedAt}
+                </span>
+              </div>
+            </button>
           </li>
         );
       })}
