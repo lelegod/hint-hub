@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Clock, History as HistoryIcon, LogIn, LogOut, Plus, Sparkles, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Flame, History as HistoryIcon, LogIn, LogOut, Plus, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -16,7 +16,8 @@ interface Props {
 
 export function AppSidebar({ history, friends, onNewSession }: Props) {
   const isMobile = useIsMobile();
-  const { authed } = useGamification();
+  const { authed, state } = useGamification();
+  const streakDays = state?.streak_days ?? 0;
   // On mobile and tablet, default to collapsed (mini) so the chat gets max room.
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<"history" | "friends">("history");
@@ -93,7 +94,7 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
 
       {/* Collapsed: show a compact "+" new-session button */}
       {collapsed && (
-        <div className="flex flex-col items-center gap-2 px-1 py-3">
+        <div className="flex flex-col items-center gap-3 px-1 py-3">
           <Button
             onClick={onNewSession}
             size="icon"
@@ -102,13 +103,29 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
           >
             <Plus className="h-4 w-4" />
           </Button>
+          {authed && (
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-accent"
+              title={`${streakDays} day streak`}
+              aria-label={`${streakDays} day streak`}
+            >
+              <Flame className="h-4 w-4" />
+            </div>
+          )}
         </div>
       )}
 
       {!collapsed && (
         <>
-          <div className="px-3 py-3">
+          <div className="space-y-2 px-3 py-3">
             <Button onClick={onNewSession} className="w-full">New session</Button>
+            {authed && (
+              <div className="flex items-center justify-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-3 py-1.5 text-sm text-accent">
+                <Flame className="h-4 w-4" />
+                <span className="text-muted-foreground">day</span>
+                <span className="font-semibold text-foreground">{streakDays}</span>
+              </div>
+            )}
           </div>
 
           <div className="mx-3 grid grid-cols-2 rounded-md bg-sidebar-accent p-1 text-sm">
