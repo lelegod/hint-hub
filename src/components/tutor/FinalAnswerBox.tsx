@@ -41,12 +41,14 @@ export function FinalAnswerBox({ session }: Props) {
       </p>
 
       {originalProblem && (
-        <div className="mb-4 rounded-md border border-border bg-muted/50 p-4">
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <BookOpen className="h-3.5 w-3.5" />
+        <div className="mb-5 overflow-hidden rounded-md border border-border bg-muted/40">
+          <div className="flex items-center gap-2 border-b border-border bg-muted/60 px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <BookOpen className="h-3.5 w-3.5 text-primary" />
             Original problem
           </div>
-          <RichText className="text-sm text-foreground">{originalProblem}</RichText>
+          <div className="space-y-4 p-5">
+            <RichText className="text-sm leading-relaxed">{originalProblem}</RichText>
+          </div>
         </div>
       )}
 
