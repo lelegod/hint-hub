@@ -11,6 +11,7 @@ import type {
 } from "@/lib/tutor/types";
 import { buildAttachments, evaluateFinal, evaluateReasoning, fetchConnectionGame, requestHint } from "@/lib/tutor/api";
 import { initialFriends, initialHistory, type FriendUpdate, type HistoryItem } from "@/lib/tutor/mockData";
+import { useGamification } from "@/hooks/useGamification";
 
 const emptyFiles: UploadedFiles = {
   problemPdf: null,
