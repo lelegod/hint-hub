@@ -8,10 +8,23 @@ export interface PendingRequest {
   created_at: string;
 }
 
+export type Presence = "online" | "away" | "offline";
+
 export interface FriendRow {
   friend_user_id: string;
   friend_name: string;
   since: string;
+  last_seen_at: string | null;
+  status_emoji: string | null;
+  status_message: string | null;
+  current_activity: string | null;
+  presence: Presence;
+}
+
+export interface MyStatus {
+  status_emoji: string | null;
+  status_message: string | null;
+  current_activity: string | null;
 }
 
 export type InviteResult =
@@ -24,16 +37,31 @@ export type InviteResult =
 export function useFriends() {
   const [pending, setPending] = useState<PendingRequest[]>([]);
   const [friends, setFriends] = useState<FriendRow[]>([]);
+  const [myStatus, setMyStatus] = useState<MyStatus>({
+    status_emoji: null,
+    status_message: null,
+    current_activity: null,
+  });
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const [pRes, fRes] = await Promise.all([
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    const [pRes, fRes, meRes] = await Promise.all([
       supabase.rpc("list_pending_friend_requests"),
       supabase.rpc("list_friends"),
+      uid
+        ? supabase
+            .from("profiles")
+            .select("status_emoji, status_message, current_activity")
+            .eq("user_id", uid)
+            .maybeSingle()
+        : Promise.resolve({ data: null as MyStatus | null }),
     ]);
     if (pRes.data) setPending(pRes.data as PendingRequest[]);
     if (fRes.data) setFriends(fRes.data as FriendRow[]);
+    if (meRes.data) setMyStatus(meRes.data as MyStatus);
     setLoading(false);
   }, []);
 
@@ -80,13 +108,29 @@ export function useFriends() {
     [refresh],
   );
 
+  const updateMyStatus = useCallback(
+    async (emoji: string, message: string) => {
+      const { error } = await supabase.rpc("update_my_status", {
+        _emoji: emoji,
+        _message: message,
+      });
+      if (!error) {
+        setMyStatus((s) => ({ ...s, status_emoji: emoji || null, status_message: message || null }));
+      }
+      return !error;
+    },
+    [],
+  );
+
   return {
     pending,
     friends,
+    myStatus,
     loading,
     refresh,
     sendRequestByEmail,
     acceptRequest,
     declineRequest,
+    updateMyStatus,
   };
 }

@@ -158,6 +158,12 @@ export function useTutorSession() {
             message: `started "${problemSummary.slice(0, 60) || "a new session"}"`,
             session_id: row.id,
           });
+          // Update presence activity
+          await supabase.rpc("set_my_activity", {
+            _activity: problemSummary.slice(0, 80) || "Solving a problem",
+          });
+          // Immediately refresh sidebar so the new session appears now
+          void sessionsHook.refresh();
         }
       }
     } catch (e) {
@@ -368,6 +374,8 @@ export function useTutorSession() {
             })
             .eq("id", sessionRowId);
         }
+        // Clear current activity on completion
+        void supabase.rpc("set_my_activity", { _activity: "" });
       } else {
         if (sessionRowId) {
           await supabase
@@ -406,6 +414,104 @@ export function useTutorSession() {
     }
   }, [problemSummary, sourceSummary, extraSummary, hints, files]);
 
+  // ----- Load an existing session from DB (resume or view) -----
+  const loadSession = useCallback(async (id: string) => {
+    setErrorMsg(null);
+    setLoadingHint(true);
+    try {
+      const { data: row, error } = await supabase
+        .from("tutor_sessions")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (error || !row) {
+        setErrorMsg("Could not load that session.");
+        setLoadingHint(false);
+        return;
+      }
+
+      // Restore setup
+      setProblemSummary(row.problem_summary ?? "");
+      setSourceSummary(row.source_summary ?? "");
+      setExtraSummary(row.extra_summary ?? "");
+      setTotalHints(row.total_hints_planned ?? 3);
+      setFullExtractedProblemText(row.full_problem_text ?? "");
+      setSessionRowId(row.id);
+      setFiles({
+        problemPdf: row.problem_file_url
+          ? { name: row.problem_file_name ?? "problem", url: row.problem_file_url, mime: "", size: 0 }
+          : null,
+        sourceMaterial: row.source_file_url
+          ? { name: row.source_file_name ?? "source", url: row.source_file_url, mime: "", size: 0 }
+          : null,
+        extraFile: row.extra_file_url
+          ? { name: row.extra_file_name ?? "extra", url: row.extra_file_url, mime: "", size: 0 }
+          : null,
+      });
+      setHints([]);
+      setCurrentIndex(0);
+      setConnection(null);
+
+      if (row.status === "completed") {
+        // Show the completed final-answer screen
+        setFinalAnswer(row.final_answer ?? "");
+        setFinalEval(
+          row.final_feedback
+            ? {
+                correct: !!row.final_correct,
+                feedback: row.final_feedback,
+                whereWentWrong: "",
+              }
+            : null,
+        );
+        setStatus("completed");
+        setLoadingHint(false);
+        return;
+      }
+
+      // Active session: re-fetch a fresh hint at the right position so the user can continue
+      setFinalAnswer(row.final_answer ?? "");
+      setFinalEval(null);
+      const hintIndex = Math.min(row.hints_used ?? 0, (row.total_hints_planned ?? 3) - 1);
+      const attachments = buildAttachments({
+        problemPdf: row.problem_file_url
+          ? { name: row.problem_file_name ?? "problem", url: row.problem_file_url, mime: "", size: 0 }
+          : null,
+        sourceMaterial: row.source_file_url
+          ? { name: row.source_file_name ?? "source", url: row.source_file_url, mime: "", size: 0 }
+          : null,
+        extraFile: row.extra_file_url
+          ? { name: row.extra_file_name ?? "extra", url: row.extra_file_url, mime: "", size: 0 }
+          : null,
+      });
+
+      if ((row.hints_used ?? 0) >= (row.total_hints_planned ?? 3)) {
+        setStatus("awaiting_final");
+        setLoadingHint(false);
+        return;
+      }
+
+      setStatus("active_hint");
+      try {
+        const c = await requestHint({
+          problemSummary: row.problem_summary ?? "",
+          sourceSummary: row.source_summary ?? "",
+          extraSummary: row.extra_summary ?? "",
+          totalHints: row.total_hints_planned ?? 3,
+          hintIndex,
+          previousHints: [],
+          attachments,
+        });
+        setHints([newEntry(c)]);
+        setCurrentIndex(0);
+      } catch (e) {
+        setErrorMsg(e instanceof Error ? e.message : "Failed to load hint");
+      }
+    } finally {
+      setLoadingHint(false);
+    }
+  }, []);
+
   const resetSession = useCallback(() => {
     setFiles(emptyFiles);
     setProblemSummary("");
@@ -420,6 +526,7 @@ export function useTutorSession() {
     setErrorMsg(null);
     setSessionRowId(null);
     setFullExtractedProblemText("");
+    void supabase.rpc("set_my_activity", { _activity: "" });
   }, []);
 
   return {
@@ -462,6 +569,7 @@ export function useTutorSession() {
     history: sessionsHook.history,
     friends: sessionsHook.friends,
     resetSession,
+    loadSession,
   };
 }
 

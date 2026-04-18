@@ -56,9 +56,9 @@ export function useSessionsAndFriends() {
       supabase
         .from("tutor_sessions")
         .select("id,title,hints_used,status,completed_at,created_at")
-        .eq("status", "completed")
-        .order("completed_at", { ascending: false })
-        .limit(30),
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50),
       supabase
         .from("activity_events")
         .select("id,user_id,type,message,created_at")
@@ -98,12 +98,39 @@ export function useSessionsAndFriends() {
     return () => sub.subscription.unsubscribe();
   }, [refresh]);
 
+  // Realtime: refresh history & activity feed whenever sessions/activity change
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`sessions-activity-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tutor_sessions", filter: `user_id=eq.${userId}` },
+        () => void refresh(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "activity_events" },
+        () => void refresh(),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, refresh]);
+
   // Adapter-shaped values matching the previous mock interface
   const history = sessions.map((s) => ({
     id: s.id,
     title: s.title,
     hintsUsed: s.hints_used,
-    completedAt: s.completed_at ? timeAgo(s.completed_at) : timeAgo(s.created_at),
+    status: s.status,
+    completedAt:
+      s.status === "completed" && s.completed_at
+        ? timeAgo(s.completed_at)
+        : s.status === "active"
+          ? "In progress"
+          : timeAgo(s.created_at),
   }));
 
   const friends = activity.map((a) => ({
