@@ -162,6 +162,7 @@ export function useTutorSession() {
           await supabase.rpc("set_my_activity", {
             _activity: problemSummary.slice(0, 80) || "Solving a problem",
           });
+        }
       }
     } catch (e) {
       console.error("Failed to persist session start", e);
