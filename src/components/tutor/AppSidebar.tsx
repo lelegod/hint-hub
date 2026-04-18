@@ -34,7 +34,6 @@ interface Props {
 }
 
 type Tab = "history" | "friends";
-type FriendsSubTab = "friends" | "requests";
 
 export function AppSidebar({ history, friends, onNewSession }: Props) {
   const isMobile = useIsMobile();
@@ -45,7 +44,6 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
 
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<Tab>("history");
-  const [friendsSubTab, setFriendsSubTab] = useState<FriendsSubTab>("friends");
 
   useEffect(() => {
     setCollapsed(true);
