@@ -1,4 +1,4 @@
-import { Brain, Coins, Flame, Snowflake, Sparkles, Trophy, Volume2, VolumeX } from "lucide-react";
+import { Brain, Flame, Snowflake, Sparkles, Trophy, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
