@@ -202,7 +202,16 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
                   />
                 </div>
                 {friendsSubTab === "friends" ? (
-                  <FriendsList friends={friendsHook.friends} feed={friends} />
+                  <div className="space-y-3">
+                    {authed && (
+                      <StatusEditor
+                        emoji={friendsHook.myStatus.status_emoji}
+                        message={friendsHook.myStatus.status_message}
+                        onSave={friendsHook.updateMyStatus}
+                      />
+                    )}
+                    <FriendsList friends={friendsHook.friends} feed={friends} />
+                  </div>
                 ) : (
                   <RequestsList
                     requests={friendsHook.pending}
