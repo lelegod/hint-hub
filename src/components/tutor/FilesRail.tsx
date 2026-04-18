@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { FileDropzone } from "./FileDropzone";
 import type { TutorSession } from "@/hooks/useTutorSession";
 
@@ -13,22 +14,60 @@ interface Props {
 }
 
 export function FilesRail({ session }: Props) {
-  const [filesOpen, setFilesOpen] = useState(true);
+  const isMobile = useIsMobile();
+  // Collapsed by default on mobile and tablet so the chat has more room.
+  // Mobile: hidden entirely until the user pops it open.
+  const [filesOpen, setFilesOpen] = useState(false);
+  const [mobileVisible, setMobileVisible] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+
+  // Reset visibility when crossing the mobile breakpoint
+  useEffect(() => {
+    if (!isMobile) setMobileVisible(true);
+    else setMobileVisible(false);
+  }, [isMobile]);
+
+  // On mobile, when fully hidden, show a tiny floating toggle so the user can pop it in.
+  if (isMobile && !mobileVisible) {
+    return (
+      <button
+        type="button"
+        onClick={() => setMobileVisible(true)}
+        className="fixed right-2 top-1/2 z-30 flex h-10 w-7 -translate-y-1/2 items-center justify-center rounded-l-md border border-r-0 border-border bg-card/90 text-muted-foreground shadow-soft backdrop-blur hover:text-foreground"
+        aria-label="Show files panel"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+    );
+  }
+
+  // Width tiers:
+  // - tablet/mobile collapsed: w-10 (super thin)
+  // - desktop collapsed:       w-12
+  // - expanded:                w-64 (slightly thinner than before)
+  const widthClass = filesOpen ? "w-64 lg:w-72" : "w-10 md:w-12";
 
   return (
     <aside
       className={cn(
         "relative flex h-full shrink-0 flex-col border-l border-border bg-card/40 transition-all duration-300",
-        filesOpen ? "w-72" : "w-12",
+        widthClass,
       )}
     >
       <button
         type="button"
-        onClick={() => setFilesOpen((o) => !o)}
+        onClick={() => {
+          if (isMobile && filesOpen) {
+            // On mobile, collapsing from open should fully hide the rail again
+            setFilesOpen(false);
+            setMobileVisible(false);
+            return;
+          }
+          setFilesOpen((o) => !o);
+        }}
         className={cn(
-          "flex items-center gap-2 px-3 py-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40",
-          filesOpen ? "justify-between" : "justify-center",
+          "flex items-center gap-2 px-2 py-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40",
+          filesOpen ? "justify-between px-3" : "justify-center",
         )}
         aria-label={filesOpen ? "Collapse files panel" : "Expand files panel"}
       >
