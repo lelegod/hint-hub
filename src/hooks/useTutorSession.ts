@@ -41,6 +41,25 @@ export function useTutorSession() {
   const [problemSummary, setProblemSummary] = useState("");
   const [sourceSummary, setSourceSummary] = useState("");
   const [extraSummary, setExtraSummary] = useState("");
+  const [fullExtractedProblemText, setFullExtractedProblemText] = useState<string>(
+    `Exercise A — Eigenvector Centrality on a Directed Network
+
+Consider a directed graph G = (V, E) with n = 5 nodes representing a small citation network between research papers. The adjacency matrix A is given by:
+
+    A = [[0, 1, 1, 0, 0],
+         [0, 0, 1, 1, 0],
+         [0, 0, 0, 1, 1],
+         [1, 0, 0, 0, 1],
+         [0, 1, 0, 0, 0]]
+
+where A[i][j] = 1 indicates that paper i cites paper j.
+
+(a) Recall that the eigenvector centrality x of a graph satisfies the equation A x = λ x, where λ is the largest eigenvalue of A (the Perron–Frobenius eigenvalue). Explain in 2–3 sentences why we specifically choose the largest eigenvalue, and what guarantees its existence and uniqueness for this matrix.
+
+(b) Compute the dominant eigenvalue λ and the corresponding eigenvector x by performing 4 iterations of the power method, starting from the uniform vector x⁽⁰⁾ = (1, 1, 1, 1, 1)ᵀ / √5. Show your intermediate vectors after normalization at each step.
+
+(c) Rank the 5 papers from most to least central according to your computed eigenvector. Briefly interpret the result: which paper is the "most influential" in this network, and why does the eigenvector centrality reward it more than simple in-degree counting would?`,
+  );
 
   // Session
   const [status, setStatus] = useState<SessionStatus>("setup");
@@ -325,6 +344,8 @@ export function useTutorSession() {
     extraSummary,
     setExtraSummary,
     setSummary,
+    fullExtractedProblemText,
+    setFullExtractedProblemText,
     // session
     status,
     hints,

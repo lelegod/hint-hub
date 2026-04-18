@@ -10,7 +10,8 @@ interface Props {
 }
 
 export function FinalAnswerBox({ session }: Props) {
-  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startConnectionGame, problemSummary } = session;
+  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startConnectionGame, problemSummary, fullExtractedProblemText } = session;
+  const originalProblem = fullExtractedProblemText?.trim() || problemSummary?.trim() || "";
 
   if (status === "completed" && finalEval?.correct) {
     return (
@@ -39,13 +40,15 @@ export function FinalAnswerBox({ session }: Props) {
         Now bring it together. Submit your final answer and your working.
       </p>
 
-      {problemSummary?.trim() && (
+      {originalProblem && (
         <div className="mb-4 rounded-md border border-border bg-muted/50 p-4">
           <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <BookOpen className="h-3.5 w-3.5" />
             Original problem
           </div>
-          <RichText className="text-sm text-foreground">{problemSummary}</RichText>
+          <div className="max-h-48 overflow-y-auto pr-2">
+            <RichText className="whitespace-pre-wrap text-sm text-foreground">{originalProblem}</RichText>
+          </div>
         </div>
       )}
 
