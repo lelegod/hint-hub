@@ -254,7 +254,8 @@ export function useTutorSession() {
         extractPromise,
       ]);
 
-      setHints([newEntry(c)]);
+      const dbHintId = await persistNewHint(dbRowId, 0, c);
+      setHints([newEntry(c, dbHintId ?? undefined)]);
 
       // Use extracted text if available, otherwise fall back to the typed summary
       const problemText = extracted?.fullProblemText || problemSummary;
@@ -353,7 +354,8 @@ export function useTutorSession() {
         previousHints: hints.map((h) => h.challenge.hint),
         attachments: buildAttachments(files),
       });
-      setHints((hs) => [...hs, newEntry(c)]);
+      const dbHintId = await persistNewHint(sessionRowId, nextIndex, c);
+      setHints((hs) => [...hs, newEntry(c, dbHintId ?? undefined)]);
       setCurrentIndex(nextIndex);
       if (sessionRowId) {
         await supabase
@@ -383,7 +385,8 @@ export function useTutorSession() {
         previousHints: hints.map((h) => h.challenge.hint),
         attachments: buildAttachments(files),
       });
-      setHints((hs) => [...hs, newEntry(c)]);
+      const dbHintId = await persistNewHint(sessionRowId, hints.length, c);
+      setHints((hs) => [...hs, newEntry(c, dbHintId ?? undefined)]);
       setCurrentIndex(hints.length);
       if (sessionRowId) {
         await supabase
