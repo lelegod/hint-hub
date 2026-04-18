@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, History as HistoryIcon, Sparkles, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Clock, History as HistoryIcon, Plus, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { FriendUpdate, HistoryItem } from "@/lib/tutor/mockData";
 
 interface Props {
@@ -11,14 +12,28 @@ interface Props {
 }
 
 export function AppSidebar({ history, friends, onNewSession }: Props) {
-  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useIsMobile();
+  // On mobile and tablet, default to collapsed (mini) so the chat gets max room.
+  const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<"history" | "friends">("history");
+
+  // Whenever viewport changes between mobile/desktop, snap to the sensible default.
+  useEffect(() => {
+    setCollapsed(true);
+  }, [isMobile]);
+
+  // Width tiers:
+  // - mobile collapsed:  w-12 (super thin)
+  // - tablet collapsed:  w-12 (super thin)
+  // - desktop collapsed: w-14
+  // - expanded (any):    w-56 on mobile-ish, w-52 lg+ (slightly thinner than before)
+  const widthClass = collapsed ? "w-12 md:w-14" : "w-56 lg:w-52";
 
   return (
     <aside
       className={cn(
         "relative flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
-        collapsed ? "w-14" : "w-56",
+        widthClass,
       )}
     >
       {collapsed && (
@@ -33,10 +48,26 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
         </Button>
       )}
 
-      <div className={cn("flex items-center border-b border-sidebar-border px-3 py-3", collapsed ? "justify-center" : "gap-2")}>
+      {/* Header */}
+      <div
+        className={cn(
+          "border-b border-sidebar-border",
+          collapsed
+            ? "flex flex-col items-center gap-1 px-2 py-3"
+            : "flex items-center gap-2 px-3 py-3",
+        )}
+      >
+        {/* Mobile collapsed: brand name above logo */}
+        {collapsed && isMobile && (
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Tutorly
+          </div>
+        )}
+
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <Sparkles className="h-4 w-4" />
         </div>
+
         {!collapsed && (
           <>
             <div className="flex-1">
@@ -55,6 +86,20 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
           </>
         )}
       </div>
+
+      {/* Collapsed: show a compact "+" new-session button */}
+      {collapsed && (
+        <div className="flex flex-col items-center gap-2 px-1 py-3">
+          <Button
+            onClick={onNewSession}
+            size="icon"
+            className="h-8 w-8 rounded-full"
+            aria-label="New session"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {!collapsed && (
         <>
