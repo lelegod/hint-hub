@@ -18,7 +18,7 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
     <aside
       className={cn(
         "relative flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
-        collapsed ? "w-14" : "w-72",
+        collapsed ? "w-12" : "w-56",
       )}
     >
       <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-3">
