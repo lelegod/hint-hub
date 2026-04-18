@@ -14,7 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gamification: {
+        Row: {
+          brain_heat: number
+          brain_heat_updated_at: string
+          created_at: string
+          hint_tokens: number
+          id: string
+          last_active_date: string | null
+          last_token_regen_at: string
+          level: number
+          max_hint_tokens: number
+          streak_days: number
+          streak_freezes: number
+          total_hints_solved: number
+          total_sessions_completed: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          brain_heat?: number
+          brain_heat_updated_at?: string
+          created_at?: string
+          hint_tokens?: number
+          id?: string
+          last_active_date?: string | null
+          last_token_regen_at?: string
+          level?: number
+          max_hint_tokens?: number
+          streak_days?: number
+          streak_freezes?: number
+          total_hints_solved?: number
+          total_sessions_completed?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          brain_heat?: number
+          brain_heat_updated_at?: string
+          created_at?: string
+          hint_tokens?: number
+          id?: string
+          last_active_date?: string | null
+          last_token_regen_at?: string
+          level?: number
+          max_hint_tokens?: number
+          streak_days?: number
+          streak_freezes?: number
+          total_hints_solved?: number
+          total_sessions_completed?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      skill_nodes: {
+        Row: {
+          id: string
+          mastery: number
+          parent_topic: string | null
+          times_practiced: number
+          topic: string
+          unlocked_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          mastery?: number
+          parent_topic?: string | null
+          times_practiced?: number
+          topic: string
+          unlocked_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          mastery?: number
+          parent_topic?: string | null
+          times_practiced?: number
+          topic?: string
+          unlocked_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
