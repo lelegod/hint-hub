@@ -4,6 +4,7 @@ import type {
   ConnectionGroup,
   FinalEvaluation,
   HintEntry,
+  MatchPair,
   MicroChallenge,
   SessionStatus,
   UploadedFileMeta,
@@ -15,6 +16,7 @@ import {
   evaluateReasoning,
   extractProblemFromFiles,
   fetchConnectionGame,
+  fetchMatchGame,
   requestHint,
 } from "@/lib/tutor/api";
 import { useGamification } from "@/hooks/useGamification";
@@ -68,6 +70,10 @@ export function useTutorSession() {
 
   // Connection game
   const [connection, setConnection] = useState<{ groups: ConnectionGroup[] } | null>(null);
+
+  // Match mini-game
+  const [match, setMatch] = useState<{ pairs: MatchPair[] } | null>(null);
+  const [previousStatus, setPreviousStatus] = useState<SessionStatus>("setup");
 
   // Re-fetch sessions list when this session completes
   useEffect(() => {
