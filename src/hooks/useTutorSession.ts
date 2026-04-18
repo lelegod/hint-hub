@@ -9,7 +9,7 @@ import type {
   UploadedFileMeta,
   UploadedFiles,
 } from "@/lib/tutor/types";
-import { buildAttachments, evaluateFinal, fetchConnectionGame, requestHint } from "@/lib/tutor/api";
+import { buildAttachments, evaluateFinal, evaluateReasoning, fetchConnectionGame, requestHint } from "@/lib/tutor/api";
 import { initialFriends, initialHistory, type FriendUpdate, type HistoryItem } from "@/lib/tutor/mockData";
 
 const emptyFiles: UploadedFiles = {
@@ -26,6 +26,8 @@ function newEntry(c: MicroChallenge): HintEntry {
     reasoning: "",
     submitted: false,
     wasCorrect: null,
+    reasoningEval: null,
+    evaluatingReasoning: false,
   };
 }
 
