@@ -98,6 +98,27 @@ export function useSessionsAndFriends() {
     return () => sub.subscription.unsubscribe();
   }, [refresh]);
 
+  // Realtime: refresh history & activity feed whenever sessions/activity change
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`sessions-activity-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tutor_sessions", filter: `user_id=eq.${userId}` },
+        () => void refresh(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "activity_events" },
+        () => void refresh(),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, refresh]);
+
   // Adapter-shaped values matching the previous mock interface
   const history = sessions.map((s) => ({
     id: s.id,
