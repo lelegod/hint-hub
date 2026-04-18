@@ -12,6 +12,12 @@ const MODEL = "google/gemini-3-flash-preview";
 
 type Mode = "hint" | "evaluate_final" | "connection_game";
 
+interface Attachment {
+  url: string;
+  mime: string;
+  label: string;
+}
+
 interface Body {
   mode: Mode;
   problemSummary?: string;
@@ -20,12 +26,38 @@ interface Body {
   totalHints?: number;
   hintIndex?: number;
   previousHints?: string[];
-  // For evaluate_final
   finalAnswer?: string;
-  // For micro-challenge feedback / extra hint
   studentAnswer?: string;
   studentReasoning?: string;
   context?: string;
+  attachments?: Attachment[];
+}
+
+// Fetch each attachment and convert to a data URL the AI gateway can consume.
+async function loadAttachments(atts: Attachment[] = []): Promise<Array<{ label: string; mime: string; dataUrl: string }>> {
+  const out: Array<{ label: string; mime: string; dataUrl: string }> = [];
+  for (const a of atts) {
+    try {
+      const r = await fetch(a.url);
+      if (!r.ok) {
+        console.error("Attachment fetch failed", a.url, r.status);
+        continue;
+      }
+      const buf = new Uint8Array(await r.arrayBuffer());
+      // Chunked base64 to avoid call-stack issues on large files
+      let bin = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < buf.length; i += chunk) {
+        bin += String.fromCharCode(...buf.subarray(i, i + chunk));
+      }
+      const b64 = btoa(bin);
+      const mime = a.mime || r.headers.get("content-type") || "application/octet-stream";
+      out.push({ label: a.label, mime, dataUrl: `data:${mime};base64,${b64}` });
+    } catch (e) {
+      console.error("Attachment load error", a.url, e);
+    }
+  }
+  return out;
 }
 
 const HINT_TOOL = {
@@ -127,49 +159,56 @@ const CONN_TOOL = {
   },
 };
 
-function buildMessages(b: Body) {
+function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dataUrl: string }>) {
+  const hasFiles = loaded.length > 0;
   const system =
     "You are a Socratic tutor. Never reveal the final answer to the original problem. " +
     "Break problems into conceptual steps. Generate clear, age-appropriate hints. " +
+    (hasFiles
+      ? "The student has attached files (PDFs or images). READ them carefully and ground every hint, citation, and micro-challenge in their actual content. Quote short phrases when citing. "
+      : "") +
     "Always cite uploaded source material when present. Avoid emojis.";
 
   const ctx = [
     b.problemSummary ? `PROBLEM:\n${b.problemSummary}` : "",
-    b.sourceSummary ? `SOURCE MATERIAL:\n${b.sourceSummary}` : "",
+    b.sourceSummary ? `SOURCE MATERIAL NOTES:\n${b.sourceSummary}` : "",
     b.extraSummary ? `EXTRA CONTEXT:\n${b.extraSummary}` : "",
+    hasFiles
+      ? `ATTACHED FILES (read them):\n${loaded.map((f) => `- ${f.label} (${f.mime})`).join("\n")}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n\n");
 
+  let userText = "";
   if (b.mode === "hint") {
     const prev = (b.previousHints ?? []).map((h, i) => `Hint ${i + 1}: ${h}`).join("\n");
-    const user =
+    userText =
       `${ctx}\n\n` +
       `Total hints planned: ${b.totalHints ?? 5}. Current hint index (0-based): ${b.hintIndex ?? 0}.\n` +
       `Previous hints already given:\n${prev || "(none)"}\n\n` +
-      `Generate the next hint plus a multiple-choice micro-challenge. Do not repeat earlier hints.`;
-    return [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ];
+      `Generate the next hint plus a multiple-choice micro-challenge. Do not repeat earlier hints.` +
+      (hasFiles ? " Reference the attached files explicitly when relevant." : "");
+  } else if (b.mode === "evaluate_final") {
+    userText = `${ctx}\n\nSTUDENT FINAL ANSWER:\n${b.finalAnswer ?? ""}\n\nEvaluate it.` +
+      (hasFiles ? " Use the attached files as ground truth." : "");
+  } else {
+    userText =
+      `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
+      `Generate 4 themed groups of 4 related terms each, drawn from the concepts in this session. ` +
+      `Mix the terms when shown to the student.`;
   }
 
-  if (b.mode === "evaluate_final") {
-    const user = `${ctx}\n\nSTUDENT FINAL ANSWER:\n${b.finalAnswer ?? ""}\n\nEvaluate it.`;
-    return [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ];
+  // Build multimodal user content: text + each file as image_url (data URL).
+  // The Lovable AI Gateway accepts data URLs for both images and PDFs in image_url parts.
+  const userContent: Array<Record<string, unknown>> = [{ type: "text", text: userText }];
+  for (const f of loaded) {
+    userContent.push({ type: "image_url", image_url: { url: f.dataUrl } });
   }
 
-  // connection_game
-  const user =
-    `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
-    `Generate 4 themed groups of 4 related terms each, drawn from the concepts in this session. ` +
-    `Mix the terms when shown to the student.`;
   return [
     { role: "system", content: system },
-    { role: "user", content: user },
+    { role: "user", content: userContent },
   ];
 }
 
@@ -188,9 +227,10 @@ Deno.serve(async (req) => {
     if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
     const tool = toolFor(body.mode);
+    const loaded = await loadAttachments(body.attachments);
     const payload = {
       model: MODEL,
-      messages: buildMessages(body),
+      messages: buildMessages(body, loaded),
       tools: [tool],
       tool_choice: { type: "function", function: { name: tool.function.name } },
     };
