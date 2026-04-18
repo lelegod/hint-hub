@@ -143,7 +143,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [state?.user_id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   // ---- Update helpers ----
   const updateGamification = useCallback(
