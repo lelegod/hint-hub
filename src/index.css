@@ -124,3 +124,35 @@
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-elevated { box-shadow: var(--shadow-elevated); }
 }
+
+/* Rich AI text: tighter spacing + KaTeX color inheritance */
+.prose-tutor > * + * { margin-top: 0.6rem; }
+.prose-tutor p { margin: 0; }
+.prose-tutor strong { color: hsl(var(--foreground)); font-weight: 600; }
+.prose-tutor em { font-style: italic; }
+.prose-tutor h1, .prose-tutor h2, .prose-tutor h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  color: hsl(var(--foreground));
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+.prose-tutor h1 { font-size: 1.25rem; }
+.prose-tutor h2 { font-size: 1.1rem; }
+.prose-tutor h3 { font-size: 1rem; }
+.prose-tutor blockquote {
+  border-left: 3px solid hsl(var(--primary) / 0.4);
+  padding-left: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+.prose-tutor table {
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+.prose-tutor th, .prose-tutor td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.35rem 0.6rem;
+}
+.prose-tutor th { background: hsl(var(--muted) / 0.5); font-weight: 600; }
+.katex { color: hsl(var(--foreground)); }
+.katex-display { margin: 0.6rem 0 !important; overflow-x: auto; overflow-y: hidden; }

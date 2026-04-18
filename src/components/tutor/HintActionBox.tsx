@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { HintEntry } from "@/lib/tutor/types";
+import { RichText } from "./RichText";
 
 interface Props {
   index: number;
@@ -67,7 +68,7 @@ export function HintActionBox({
       </div>
 
       <div className="space-y-5 p-5">
-        <p className="text-sm leading-relaxed text-foreground">{c.hint}</p>
+        <RichText className="text-sm">{c.hint}</RichText>
 
         {c.sourceReference && (
           <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
@@ -81,7 +82,7 @@ export function HintActionBox({
             Quick check
           </div>
           <div className="rounded-md border border-border bg-background p-3 text-sm text-foreground">
-            {c.microChallenge}
+            <RichText className="text-sm">{c.microChallenge}</RichText>
           </div>
 
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -154,7 +155,7 @@ export function HintActionBox({
               )}
               {entry.wasCorrect ? "Nicely reasoned" : "Not quite, but here is why"}
             </div>
-            <p className="text-sm leading-relaxed text-foreground/90">{c.correctExplanation}</p>
+            <RichText className="text-sm">{c.correctExplanation}</RichText>
             {isCurrent && (
               <div className="mt-4 flex justify-end">
                 <Button onClick={onContinue} disabled={loadingNext} className="gap-2">
