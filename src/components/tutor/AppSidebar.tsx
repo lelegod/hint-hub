@@ -18,28 +18,42 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
     <aside
       className={cn(
         "relative flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
-        collapsed ? "w-12" : "w-56",
+        collapsed ? "w-14" : "w-56",
       )}
     >
-      <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-3">
+      {collapsed && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute left-full top-4 z-20 ml-2 h-8 w-8 rounded-full border-sidebar-border bg-card text-foreground shadow-soft"
+          onClick={() => setCollapsed(false)}
+          aria-label="Expand sidebar"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
+
+      <div className={cn("flex items-center border-b border-sidebar-border px-3 py-3", collapsed ? "justify-center" : "gap-2")}>
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <Sparkles className="h-4 w-4" />
         </div>
         {!collapsed && (
-          <div className="flex-1">
-            <div className="font-serif text-lg leading-tight text-sidebar-foreground">Tutorly</div>
-            <div className="text-xs text-muted-foreground">Step-by-step tutor</div>
-          </div>
+          <>
+            <div className="flex-1">
+              <div className="font-serif text-lg leading-tight text-sidebar-foreground">Tutorly</div>
+              <div className="text-xs text-muted-foreground">Step-by-step tutor</div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-sidebar-foreground"
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-sidebar-foreground"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
       </div>
 
       {!collapsed && (
