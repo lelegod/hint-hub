@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -17,11 +17,35 @@ export function ChatThread({ session }: Props) {
   const canStart = session.problemSummary.trim().length > 0;
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new hints arrive
+  // Which hint is currently shown in the main slide. Defaults to the live one.
+  const [viewIndex, setViewIndex] = useState<number | null>(null);
+  // Animation direction for slide transition: "right" (new comes from right) or "left" (revisiting older)
+  const [slideDir, setSlideDir] = useState<"right" | "left">("right");
+  // A nonce that forces remount of the slide so the animation replays.
+  const [slideKey, setSlideKey] = useState(0);
+
+  const showFinal =
+    status === "awaiting_final" || status === "evaluating" || status === "completed";
+
+  // Active hint index (the one the user is working on right now)
+  const activeIdx = session.currentIndex;
+  // The hint shown in the main viewport — defaults to the active one
+  const shownIdx = viewIndex ?? activeIdx;
+  const shownHint = session.hints[shownIdx];
+  const isViewingPast = viewIndex !== null && viewIndex !== activeIdx;
+
+  // When a NEW hint arrives, snap back to live view and animate from the right
+  useEffect(() => {
+    setViewIndex(null);
+    setSlideDir("right");
+    setSlideKey((k) => k + 1);
+  }, [session.hints.length]);
+
+  // When the chat itself scrolls (rarely), keep it pinned to bottom on new content
   useEffect(() => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [session.hints.length, session.loadingHint, status]);
+  }, [session.hints.length, status]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +54,19 @@ export function ChatThread({ session }: Props) {
 
   const completedCount = session.hints.filter((h) => h.submitted).length;
 
+  const goToHint = (idx: number) => {
+    if (idx === shownIdx) return;
+    setSlideDir(idx > shownIdx ? "right" : "left");
+    setViewIndex(idx);
+    setSlideKey((k) => k + 1);
+  };
+
   return (
     <div className="flex h-full w-full flex-col">
       {/* Progress bar (only after session starts) */}
       {!isSetup && (
         <div className="border-b border-border bg-card/60 px-6 py-3">
-          <div className="mx-auto flex max-w-2xl flex-col gap-1.5">
+          <div className="mx-auto flex max-w-3xl flex-col gap-1.5">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="font-medium uppercase tracking-wide">
                 {status === "awaiting_final"
@@ -44,7 +75,7 @@ export function ChatThread({ session }: Props) {
                     ? "Reviewing your answer"
                     : status === "completed"
                       ? "Session complete"
-                      : `Hint ${Math.min(session.currentIndex + 1, session.totalHints)} of ${session.totalHints}`}
+                      : `Hint ${Math.min(activeIdx + 1, session.totalHints)} of ${session.totalHints}`}
               </span>
               <span>
                 {completedCount} / {session.totalHints} completed
@@ -58,12 +89,12 @@ export function ChatThread({ session }: Props) {
         </div>
       )}
 
-      {/* Scrollable chat column */}
+      {/* Main column */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div
           className={cn(
-            "mx-auto flex w-full max-w-2xl flex-col px-6",
-            isSetup ? "min-h-full justify-center py-12" : "py-8",
+            "mx-auto flex w-full max-w-3xl flex-col px-6",
+            isSetup ? "min-h-full justify-center py-12" : "py-6",
           )}
         >
           {isSetup ? (
@@ -89,29 +120,61 @@ export function ChatThread({ session }: Props) {
                 </div>
               )}
 
-              {session.hints.map((h, idx) => (
-                <HintActionBox
-                  key={h.id}
-                  index={idx}
-                  total={session.totalHints}
-                  entry={h}
-                  isCurrent={idx === session.currentIndex && status === "active_hint"}
-                  loadingNext={session.loadingHint}
-                  onSelect={(i) => session.selectChoice(h.id, i)}
-                  onReason={(t) => session.setReasoning(h.id, t)}
-                  onSubmit={() => session.submitChoice(h.id)}
-                  onContinue={session.continueNext}
+              {/* Hint timeline — only shown when there's more than one hint */}
+              {session.hints.length > 1 && !showFinal && (
+                <HintTimeline
+                  total={session.hints.length}
+                  hints={session.hints}
+                  activeIdx={activeIdx}
+                  shownIdx={shownIdx}
+                  onSelect={goToHint}
                 />
-              ))}
+              )}
+
+              {/* Sliding viewport — clip overflow so the slide animation looks contained */}
+              <div className="relative overflow-hidden">
+                {showFinal ? (
+                  <div key="final" className="animate-slide-in-right">
+                    <FinalAnswerBox session={session} />
+                  </div>
+                ) : shownHint ? (
+                  <div
+                    key={slideKey}
+                    className={
+                      slideDir === "right" ? "animate-slide-in-right" : "animate-slide-in-left"
+                    }
+                  >
+                    {isViewingPast && (
+                      <div className="mb-2 flex items-center justify-between rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                        <span>You're reviewing a previous hint.</span>
+                        <button
+                          type="button"
+                          onClick={() => goToHint(activeIdx)}
+                          className="font-medium text-primary hover:underline"
+                        >
+                          Back to current →
+                        </button>
+                      </div>
+                    )}
+                    <HintActionBox
+                      index={shownIdx}
+                      total={session.totalHints}
+                      entry={shownHint}
+                      isCurrent={shownIdx === activeIdx && status === "active_hint"}
+                      loadingNext={session.loadingHint}
+                      onSelect={(i) => session.selectChoice(shownHint.id, i)}
+                      onReason={(t) => session.setReasoning(shownHint.id, t)}
+                      onSubmit={() => session.submitChoice(shownHint.id)}
+                      onContinue={session.continueNext}
+                    />
+                  </div>
+                ) : null}
+              </div>
 
               {session.loadingHint && (
                 <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Drafting the next hint...
                 </div>
-              )}
-
-              {(status === "awaiting_final" || status === "evaluating" || status === "completed") && (
-                <FinalAnswerBox session={session} />
               )}
             </div>
           )}
@@ -154,6 +217,54 @@ export function ChatThread({ session }: Props) {
           </form>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ---------- Hint timeline (clickable dots / pills) ---------- */
+
+interface TimelineProps {
+  total: number;
+  hints: TutorSession["hints"];
+  activeIdx: number;
+  shownIdx: number;
+  onSelect: (idx: number) => void;
+}
+
+function HintTimeline({ total, hints, activeIdx, shownIdx, onSelect }: TimelineProps) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-1">
+      {Array.from({ length: total }).map((_, i) => {
+        const h = hints[i];
+        const isShown = i === shownIdx;
+        const isActive = i === activeIdx;
+        const isDone = h?.submitted;
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onSelect(i)}
+            className={cn(
+              "group flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all",
+              isShown
+                ? "border-primary bg-primary text-primary-foreground shadow-soft"
+                : isDone
+                  ? "border-success/40 bg-success-soft text-success hover:border-success"
+                  : isActive
+                    ? "border-primary/40 bg-primary-soft text-primary"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/30",
+            )}
+            aria-label={`View hint ${i + 1}`}
+          >
+            {isDone ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <span className="font-mono text-[10px] opacity-70">#</span>
+            )}
+            {i + 1}
+          </button>
+        );
+      })}
     </div>
   );
 }
