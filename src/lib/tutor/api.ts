@@ -14,7 +14,7 @@ interface AttachmentPayload {
 }
 
 interface TutorPayload {
-  mode: "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning";
+  mode: "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem";
   problemSummary?: string;
   sourceSummary?: string;
   extraSummary?: string;
@@ -61,3 +61,6 @@ export const fetchConnectionGame = (p: Omit<TutorPayload, "mode">) =>
 
 export const evaluateReasoning = (p: Omit<TutorPayload, "mode">) =>
   callTutor<ReasoningEvaluation>({ ...p, mode: "evaluate_reasoning" });
+
+export const extractProblemFromFiles = (p: Omit<TutorPayload, "mode">) =>
+  callTutor<{ title: string; fullProblemText: string }>({ ...p, mode: "extract_problem" });
