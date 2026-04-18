@@ -20,9 +20,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useGamification } from "@/hooks/useGamification";
-import { useFriends } from "@/hooks/useFriends";
+import { useFriends, type FriendRow, type Presence } from "@/hooks/useFriends";
+import { usePresence } from "@/hooks/usePresence";
 import { supabase } from "@/integrations/supabase/client";
 import { AddFriendDialog } from "@/components/friends/AddFriendDialog";
+import { StatusEditor } from "@/components/friends/StatusEditor";
 import type { FriendUpdate, HistoryItem } from "@/lib/tutor/mockData";
 
 interface Props {
@@ -39,6 +41,7 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
   const friendsHook = useFriends();
+  usePresence(authed);
 
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<Tab>("history");
