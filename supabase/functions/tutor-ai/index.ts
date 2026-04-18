@@ -236,6 +236,23 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
   } else if (b.mode === "evaluate_final") {
     userText = `${ctx}\n\nSTUDENT FINAL ANSWER:\n${b.finalAnswer ?? ""}\n\nEvaluate it.` +
       (hasFiles ? " Use the attached files as ground truth." : "");
+  } else if (b.mode === "evaluate_reasoning") {
+    const choicesList = (b.choices ?? []).map((c, i) => `${String.fromCharCode(65 + i)}. ${c}`).join("\n");
+    const picked =
+      b.selectedIndex !== undefined && b.choices ? b.choices[b.selectedIndex] : "(none)";
+    const correct =
+      b.correctIndex !== undefined && b.choices ? b.choices[b.correctIndex] : "(unknown)";
+    userText =
+      `${ctx}\n\n` +
+      `HINT GIVEN TO STUDENT:\n${b.hintText ?? ""}\n\n` +
+      `MICRO-CHALLENGE:\n${b.microChallenge ?? ""}\n\n` +
+      `CHOICES:\n${choicesList}\n\n` +
+      `STUDENT PICKED: ${picked}\n` +
+      `CORRECT ANSWER: ${correct}\n\n` +
+      `STUDENT'S WRITTEN REASONING:\n"""${b.studentReasoning ?? ""}"""\n\n` +
+      `Evaluate the student's WRITTEN REASONING above. Be specific: comment on what they got right, where their thinking went off, ` +
+      `and any misconception you can spot in their words. Quote a short phrase from their reasoning when you can. ` +
+      `Do not just restate the textbook explanation.`;
   } else {
     userText =
       `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
@@ -259,6 +276,7 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
 function toolFor(mode: Mode) {
   if (mode === "hint") return HINT_TOOL;
   if (mode === "evaluate_final") return EVAL_TOOL;
+  if (mode === "evaluate_reasoning") return REASONING_TOOL;
   return CONN_TOOL;
 }
 
