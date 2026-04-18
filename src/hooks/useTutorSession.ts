@@ -282,10 +282,12 @@ export function useTutorSession() {
   // ----- Action box mutations -----
   const selectChoice = useCallback((entryId: string, idx: number) => {
     setHints((hs) => hs.map((h) => (h.id === entryId ? { ...h, selectedIndex: idx } : h)));
+    void persistHintUpdate(entryId, { selected_index: idx });
   }, []);
 
   const setReasoning = useCallback((entryId: string, text: string) => {
     setHints((hs) => hs.map((h) => (h.id === entryId ? { ...h, reasoning: text } : h)));
+    void persistHintUpdate(entryId, { reasoning: text });
   }, []);
 
   const submitChoice = useCallback(
