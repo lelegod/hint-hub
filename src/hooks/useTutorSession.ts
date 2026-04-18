@@ -158,6 +158,10 @@ export function useTutorSession() {
             message: `started "${problemSummary.slice(0, 60) || "a new session"}"`,
             session_id: row.id,
           });
+          // Update presence activity
+          await supabase.rpc("set_my_activity", {
+            _activity: problemSummary.slice(0, 80) || "Solving a problem",
+          });
         }
       }
     } catch (e) {
@@ -368,6 +372,8 @@ export function useTutorSession() {
             })
             .eq("id", sessionRowId);
         }
+        // Clear current activity on completion
+        void supabase.rpc("set_my_activity", { _activity: "" });
       } else {
         if (sessionRowId) {
           await supabase
@@ -420,6 +426,7 @@ export function useTutorSession() {
     setErrorMsg(null);
     setSessionRowId(null);
     setFullExtractedProblemText("");
+    void supabase.rpc("set_my_activity", { _activity: "" });
   }, []);
 
   return {

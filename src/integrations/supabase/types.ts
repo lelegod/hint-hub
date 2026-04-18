@@ -167,24 +167,36 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          current_activity: string | null
           display_name: string | null
           id: string
+          last_seen_at: string | null
+          status_emoji: string | null
+          status_message: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          current_activity?: string | null
           display_name?: string | null
           id?: string
+          last_seen_at?: string | null
+          status_emoji?: string | null
+          status_message?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          current_activity?: string | null
           display_name?: string | null
           id?: string
+          last_seen_at?: string | null
+          status_emoji?: string | null
+          status_message?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -312,12 +324,18 @@ export type Database = {
         Args: { _friendship_id: string }
         Returns: boolean
       }
+      heartbeat: { Args: never; Returns: undefined }
       list_friends: {
         Args: never
         Returns: {
+          current_activity: string
           friend_name: string
           friend_user_id: string
+          last_seen_at: string
+          presence: string
           since: string
+          status_emoji: string
+          status_message: string
         }[]
       }
       list_pending_friend_requests: {
@@ -330,6 +348,11 @@ export type Database = {
         }[]
       }
       send_friend_request_by_email: { Args: { _email: string }; Returns: Json }
+      set_my_activity: { Args: { _activity: string }; Returns: undefined }
+      update_my_status: {
+        Args: { _emoji: string; _message: string }
+        Returns: undefined
+      }
     }
     Enums: {
       activity_type:
