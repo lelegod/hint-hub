@@ -109,10 +109,12 @@ export function HintActionBox({
                     isWrongPick && "border-accent bg-accent-soft text-accent-foreground/90",
                   )}
                 >
-                  <span className="mr-2 font-mono text-xs text-muted-foreground">
-                    {String.fromCharCode(65 + i)}.
-                  </span>
-                  {choice}
+                  <div className="flex items-start gap-2">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {String.fromCharCode(65 + i)}.
+                    </span>
+                    <RichText className="text-sm [&_p]:m-0">{choice}</RichText>
+                  </div>
                 </button>
               );
             })}
