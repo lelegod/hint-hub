@@ -42,15 +42,14 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
       )}
     >
       {collapsed && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-full top-4 z-20 ml-2 h-8 w-8 rounded-full border-sidebar-border bg-card text-foreground shadow-soft"
+        <button
+          type="button"
           onClick={() => setCollapsed(false)}
           aria-label="Expand sidebar"
+          className="group absolute left-full top-1/2 z-20 flex h-12 w-4 -translate-y-1/2 items-center justify-center rounded-r-md border border-l-0 border-sidebar-border bg-sidebar/80 text-muted-foreground backdrop-blur transition-colors hover:bg-sidebar hover:text-sidebar-foreground"
         >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+          <ChevronRight className="h-3 w-3" />
+        </button>
       )}
 
       {/* Header */}
