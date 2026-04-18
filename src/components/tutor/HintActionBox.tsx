@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, BookMarked, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
+import { ArrowRight, BookMarked, CheckCircle2, Lightbulb, Loader2, MessageSquareQuote, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -139,31 +139,74 @@ export function HintActionBox({
         )}
 
         {entry.submitted && (
-          <div
-            className={cn(
-              "rounded-md border p-4 animate-fade-in",
-              entry.wasCorrect
-                ? "border-success/40 bg-success-soft"
-                : "border-accent/40 bg-accent-soft",
-            )}
-          >
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              {entry.wasCorrect ? (
-                <CheckCircle2 className="h-4 w-4 text-success" />
-              ) : (
-                <XCircle className="h-4 w-4 text-accent" />
-              )}
-              {entry.wasCorrect ? "Nicely reasoned" : "Not quite, but here is why"}
-            </div>
-            <RichText className="text-sm">{c.correctExplanation}</RichText>
-            {isCurrent && (
-              <div className="mt-4 flex justify-end">
-                <Button onClick={onContinue} disabled={loadingNext} className="gap-2">
-                  {loadingNext ? "Loading..." : index + 1 >= total ? "Move to final answer" : "Continue to next hint"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+          <div className="space-y-3 animate-fade-in">
+            {/* AI feedback on the student's written reasoning */}
+            <div className="rounded-md border border-primary/30 bg-primary-soft/40 p-4">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-primary">
+                <MessageSquareQuote className="h-4 w-4" />
+                On your reasoning
+                {entry.reasoningEval && (
+                  <span
+                    className={cn(
+                      "ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
+                      entry.reasoningEval.reasoningQuality === "strong" && "bg-success/15 text-success",
+                      entry.reasoningEval.reasoningQuality === "partial" && "bg-warning/15 text-warning",
+                      entry.reasoningEval.reasoningQuality === "weak" && "bg-accent/15 text-accent",
+                    )}
+                  >
+                    {entry.reasoningEval.reasoningQuality}
+                  </span>
+                )}
               </div>
-            )}
+              {entry.evaluatingReasoning && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Reading your reasoning...
+                </div>
+              )}
+              {entry.reasoningEval && (
+                <div className="space-y-2">
+                  <RichText className="text-sm">{entry.reasoningEval.feedback}</RichText>
+                  {entry.reasoningEval.suggestion && (
+                    <div className="rounded border border-border bg-card/60 p-2 text-xs text-foreground/80">
+                      <span className="font-semibold text-primary">Try this: </span>
+                      <RichText className="text-xs inline">{entry.reasoningEval.suggestion}</RichText>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Original correct/incorrect explanation */}
+            <div
+              className={cn(
+                "rounded-md border p-4",
+                entry.wasCorrect
+                  ? "border-success/40 bg-success-soft"
+                  : "border-accent/40 bg-accent-soft",
+              )}
+            >
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                {entry.wasCorrect ? (
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-accent" />
+                )}
+                {entry.wasCorrect ? "Correct answer" : "The correct answer"}
+              </div>
+              <RichText className="text-sm">{c.correctExplanation}</RichText>
+              {isCurrent && (
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={onContinue}
+                    disabled={loadingNext || entry.evaluatingReasoning}
+                    className="gap-2"
+                  >
+                    {loadingNext ? "Loading..." : index + 1 >= total ? "Move to final answer" : "Continue to next hint"}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -1,5 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { MicroChallenge, FinalEvaluation, ConnectionGroup, UploadedFiles } from "./types";
+import type {
+  MicroChallenge,
+  FinalEvaluation,
+  ConnectionGroup,
+  UploadedFiles,
+  ReasoningEvaluation,
+} from "./types";
 
 interface AttachmentPayload {
   url: string;
@@ -8,7 +14,7 @@ interface AttachmentPayload {
 }
 
 interface TutorPayload {
-  mode: "hint" | "evaluate_final" | "connection_game";
+  mode: "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning";
   problemSummary?: string;
   sourceSummary?: string;
   extraSummary?: string;
@@ -17,6 +23,13 @@ interface TutorPayload {
   previousHints?: string[];
   finalAnswer?: string;
   attachments?: AttachmentPayload[];
+  // evaluate_reasoning
+  hintText?: string;
+  microChallenge?: string;
+  choices?: string[];
+  correctIndex?: number;
+  selectedIndex?: number;
+  studentReasoning?: string;
 }
 
 export function buildAttachments(files: UploadedFiles): AttachmentPayload[] {
@@ -45,3 +58,6 @@ export const evaluateFinal = (p: Omit<TutorPayload, "mode">) =>
 
 export const fetchConnectionGame = (p: Omit<TutorPayload, "mode">) =>
   callTutor<{ groups: ConnectionGroup[] }>({ ...p, mode: "connection_game" });
+
+export const evaluateReasoning = (p: Omit<TutorPayload, "mode">) =>
+  callTutor<ReasoningEvaluation>({ ...p, mode: "evaluate_reasoning" });

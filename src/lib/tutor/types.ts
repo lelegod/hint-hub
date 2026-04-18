@@ -28,6 +28,13 @@ export interface MicroChallenge {
   correctExplanation: string;
 }
 
+export interface ReasoningEvaluation {
+  choiceCorrect: boolean;
+  reasoningQuality: "strong" | "partial" | "weak";
+  feedback: string;
+  suggestion: string;
+}
+
 export interface HintEntry {
   id: string;
   challenge: MicroChallenge;
@@ -35,6 +42,8 @@ export interface HintEntry {
   reasoning: string;
   submitted: boolean;
   wasCorrect: boolean | null;
+  reasoningEval: ReasoningEvaluation | null;
+  evaluatingReasoning: boolean;
 }
 
 export interface FinalEvaluation {
