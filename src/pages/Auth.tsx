@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Sparkles, ArrowLeft, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,11 @@ type Mode = "signin" | "signup" | "forgot_email" | "forgot_code" | "forgot_new_p
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("signin");
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+  const invitedEmail = searchParams.get("email");
+  const [mode, setMode] = useState<Mode>(inviteToken ? "signup" : "signin");
+  const [email, setEmail] = useState(invitedEmail ?? "");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -164,6 +167,15 @@ export default function Auth() {
           <h1 className="font-serif text-2xl text-foreground">{headerTitle}</h1>
           <p className="text-sm text-muted-foreground">{headerSub}</p>
         </div>
+
+        {inviteToken && mode === "signup" && (
+          <div className="mb-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary-soft p-3 text-sm text-foreground">
+            <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>
+              You've been invited to join Tutorly. Sign up and you'll be friends automatically.
+            </span>
+          </div>
+        )}
 
         {(mode === "signin" || mode === "signup") && (
           <>

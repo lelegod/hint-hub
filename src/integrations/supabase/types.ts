@@ -49,6 +49,36 @@ export type Database = {
           },
         ]
       }
+      friend_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          invited_email: string
+          inviter_id: string
+          status: Database["public"]["Enums"]["invite_status"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_email: string
+          inviter_id: string
+          status?: Database["public"]["Enums"]["invite_status"]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_email?: string
+          inviter_id?: string
+          status?: Database["public"]["Enums"]["invite_status"]
+          token?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -273,7 +303,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_friend_request: {
+        Args: { _friendship_id: string }
+        Returns: boolean
+      }
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
+      decline_friend_request: {
+        Args: { _friendship_id: string }
+        Returns: boolean
+      }
+      list_friends: {
+        Args: never
+        Returns: {
+          friend_name: string
+          friend_user_id: string
+          since: string
+        }[]
+      }
+      list_pending_friend_requests: {
+        Args: never
+        Returns: {
+          created_at: string
+          friendship_id: string
+          requester_id: string
+          requester_name: string
+        }[]
+      }
+      send_friend_request_by_email: { Args: { _email: string }; Returns: Json }
     }
     Enums: {
       activity_type:
@@ -282,6 +338,7 @@ export type Database = {
         | "hint_solved"
         | "streak_milestone"
       friendship_status: "pending" | "accepted" | "blocked"
+      invite_status: "pending" | "accepted" | "expired"
       session_status: "active" | "completed" | "abandoned"
     }
     CompositeTypes: {
@@ -417,6 +474,7 @@ export const Constants = {
         "streak_milestone",
       ],
       friendship_status: ["pending", "accepted", "blocked"],
+      invite_status: ["pending", "accepted", "expired"],
       session_status: ["active", "completed", "abandoned"],
     },
   },
