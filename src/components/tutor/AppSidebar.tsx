@@ -125,7 +125,6 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
               onClick={() => {
                 setCollapsed(false);
                 setTab("friends");
-                setFriendsSubTab("requests");
               }}
               className="relative flex h-8 w-8 items-center justify-center rounded-full border border-primary/30 bg-primary-soft text-primary"
               aria-label={`${pendingCount} friend requests`}
@@ -183,40 +182,27 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
           <div className="flex-1 overflow-y-auto px-3 py-3">
             {tab === "history" && <HistoryList history={history} />}
             {tab === "friends" && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 rounded-md bg-sidebar-accent p-1 text-xs">
-                  <TabButton
-                    active={friendsSubTab === "friends"}
-                    onClick={() => setFriendsSubTab("friends")}
-                    icon={<Users className="h-3 w-3" />}
-                    label="Friends"
-                  />
-                  <TabButton
-                    active={friendsSubTab === "requests"}
-                    onClick={() => setFriendsSubTab("requests")}
-                    icon={<Bell className="h-3 w-3" />}
-                    label="Requests"
-                    badge={pendingCount > 0 ? pendingCount : undefined}
-                  />
-                </div>
-                {friendsSubTab === "friends" ? (
-                  <div className="space-y-3">
-                    {authed && (
-                      <StatusEditor
-                        emoji={friendsHook.myStatus.status_emoji}
-                        message={friendsHook.myStatus.status_message}
-                        onSave={friendsHook.updateMyStatus}
-                      />
-                    )}
-                    <FriendsList friends={friendsHook.friends} feed={friends} />
-                  </div>
-                ) : (
-                  <RequestsList
-                    requests={friendsHook.pending}
-                    onAccept={friendsHook.acceptRequest}
-                    onDecline={friendsHook.declineRequest}
+              <div className="space-y-4">
+                {authed && (
+                  <StatusEditor
+                    emoji={friendsHook.myStatus.status_emoji}
+                    message={friendsHook.myStatus.status_message}
+                    onSave={friendsHook.updateMyStatus}
                   />
                 )}
+                {friendsHook.pending.length > 0 && (
+                  <div>
+                    <div className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Requests
+                    </div>
+                    <RequestsList
+                      requests={friendsHook.pending}
+                      onAccept={friendsHook.acceptRequest}
+                      onDecline={friendsHook.declineRequest}
+                    />
+                  </div>
+                )}
+                <FriendsList friends={friendsHook.friends} feed={friends} />
               </div>
             )}
           </div>
