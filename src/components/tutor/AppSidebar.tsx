@@ -267,26 +267,39 @@ function HistoryList({ history }: { history: HistoryItem[] }) {
   if (history.length === 0) {
     return (
       <div className="rounded-md border border-dashed border-sidebar-border p-4 text-center text-xs text-muted-foreground">
-        Your finished sessions will appear here.
+        Your sessions will appear here as you start them.
       </div>
     );
   }
   return (
     <ul className="space-y-2">
-      {history.map((h) => (
-        <li
-          key={h.id}
-          className="rounded-md border border-sidebar-border bg-sidebar p-3 text-sm hover:border-primary/40"
-        >
-          <div className="line-clamp-2 font-medium text-sidebar-foreground">{h.title}</div>
-          <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{h.hintsUsed} hints</span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" /> {h.completedAt}
-            </span>
-          </div>
-        </li>
-      ))}
+      {history.map((h) => {
+        const active = h.status === "active";
+        return (
+          <li
+            key={h.id}
+            className={cn(
+              "rounded-md border bg-sidebar p-3 text-sm transition-colors hover:border-primary/40",
+              active ? "border-primary/40" : "border-sidebar-border",
+            )}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="line-clamp-2 flex-1 font-medium text-sidebar-foreground">{h.title}</div>
+              {active && (
+                <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  Active
+                </span>
+              )}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>{h.hintsUsed} hints</span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" /> {h.completedAt}
+              </span>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
