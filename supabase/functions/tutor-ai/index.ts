@@ -10,7 +10,7 @@ const corsHeaders = {
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
 
-type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning";
+type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem";
 
 interface Attachment {
   url: string;
@@ -159,6 +159,31 @@ const REASONING_TOOL = {
         },
       },
       required: ["choiceCorrect", "reasoningQuality", "feedback", "suggestion"],
+      additionalProperties: false,
+    },
+  },
+};
+
+const EXTRACT_TOOL = {
+  type: "function",
+  function: {
+    name: "extract_problem",
+    description:
+      "Extract the full problem statement from the attached files (and short notes if any). Preserve every sub-question, every equation, and structure with markdown + LaTeX math.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "A concise 3-8 word title for this problem, suitable for a session list.",
+        },
+        fullProblemText: {
+          type: "string",
+          description:
+            "The COMPLETE problem statement, in GitHub-flavored markdown. Use $...$ for inline math and $$...$$ for display math. Use \\begin{pmatrix}...\\end{pmatrix} for matrices. Use **(a)**, **(b)** style labels for sub-questions. Preserve every detail — do not summarize.",
+        },
+      },
+      required: ["title", "fullProblemText"],
       additionalProperties: false,
     },
   },
