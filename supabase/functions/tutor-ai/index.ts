@@ -10,7 +10,7 @@ const corsHeaders = {
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
 
-type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem";
+type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem" | "match_game";
 
 interface Attachment {
   url: string;
@@ -189,6 +189,45 @@ const EXTRACT_TOOL = {
   },
 };
 
+const MATCH_TOOL = {
+  type: "function",
+  function: {
+    name: "match_game",
+    description:
+      "Generate 6 pairs to match. Each pair is either a term and its definition/description, or two synonyms. All pairs should come from the concepts in this learning session.",
+    parameters: {
+      type: "object",
+      properties: {
+        pairs: {
+          type: "array",
+          minItems: 6,
+          maxItems: 6,
+          items: {
+            type: "object",
+            properties: {
+              left: { type: "string", description: "The term, word, or concept (short, 1-4 words)" },
+              right: {
+                type: "string",
+                description:
+                  "The matching definition, description, or synonym (concise, max ~12 words)",
+              },
+              kind: {
+                type: "string",
+                enum: ["synonym", "definition"],
+                description: "Whether the pair is a synonym pair or term-definition pair",
+              },
+            },
+            required: ["left", "right", "kind"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["pairs"],
+      additionalProperties: false,
+    },
+  },
+};
+
 const CONN_TOOL = {
   type: "function",
   function: {
@@ -285,6 +324,13 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       `Include every sub-question, every formula, every matrix, every constraint. ` +
       `Format with markdown and LaTeX (use $...$ inline and $$...$$ for display, \\begin{pmatrix} for matrices). ` +
       `Do not solve anything, do not summarize — extract the problem text faithfully.`;
+  } else if (b.mode === "match_game") {
+    userText =
+      `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
+      `Generate 6 matching pairs drawn from the concepts in this session. ` +
+      `Each pair is either (a) a term and its concise definition/description, or (b) two synonyms. ` +
+      `Mix both kinds. Keep left items short (1-4 words) and right items concise (max ~12 words). ` +
+      `Make pairs unambiguous so each left has exactly one correct right.`;
   } else {
     userText =
       `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
@@ -310,6 +356,7 @@ function toolFor(mode: Mode) {
   if (mode === "evaluate_final") return EVAL_TOOL;
   if (mode === "evaluate_reasoning") return REASONING_TOOL;
   if (mode === "extract_problem") return EXTRACT_TOOL;
+  if (mode === "match_game") return MATCH_TOOL;
   return CONN_TOOL;
 }
 

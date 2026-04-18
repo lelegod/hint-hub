@@ -5,6 +5,7 @@ import type {
   ConnectionGroup,
   UploadedFiles,
   ReasoningEvaluation,
+  MatchPair,
 } from "./types";
 
 interface AttachmentPayload {
@@ -14,7 +15,7 @@ interface AttachmentPayload {
 }
 
 interface TutorPayload {
-  mode: "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem";
+  mode: "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem" | "match_game";
   problemSummary?: string;
   sourceSummary?: string;
   extraSummary?: string;
@@ -64,3 +65,6 @@ export const evaluateReasoning = (p: Omit<TutorPayload, "mode">) =>
 
 export const extractProblemFromFiles = (p: Omit<TutorPayload, "mode">) =>
   callTutor<{ title: string; fullProblemText: string }>({ ...p, mode: "extract_problem" });
+
+export const fetchMatchGame = (p: Omit<TutorPayload, "mode">) =>
+  callTutor<{ pairs: MatchPair[] }>({ ...p, mode: "match_game" });
