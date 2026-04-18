@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_events: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          session_id: string | null
+          type: Database["public"]["Enums"]["activity_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          session_id?: string | null
+          type: Database["public"]["Enums"]["activity_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          session_id?: string | null
+          type?: Database["public"]["Enums"]["activity_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["friendship_status"]
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gamification: {
         Row: {
           brain_heat: number
@@ -131,15 +193,96 @@ export type Database = {
         }
         Relationships: []
       }
+      tutor_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          extra_file_name: string | null
+          extra_file_url: string | null
+          extra_summary: string | null
+          final_answer: string | null
+          final_correct: boolean | null
+          final_feedback: string | null
+          full_problem_text: string | null
+          hints_used: number
+          id: string
+          problem_file_name: string | null
+          problem_file_url: string | null
+          problem_summary: string
+          source_file_name: string | null
+          source_file_url: string | null
+          source_summary: string | null
+          status: Database["public"]["Enums"]["session_status"]
+          title: string
+          total_hints_planned: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          extra_file_name?: string | null
+          extra_file_url?: string | null
+          extra_summary?: string | null
+          final_answer?: string | null
+          final_correct?: boolean | null
+          final_feedback?: string | null
+          full_problem_text?: string | null
+          hints_used?: number
+          id?: string
+          problem_file_name?: string | null
+          problem_file_url?: string | null
+          problem_summary?: string
+          source_file_name?: string | null
+          source_file_url?: string | null
+          source_summary?: string | null
+          status?: Database["public"]["Enums"]["session_status"]
+          title?: string
+          total_hints_planned?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          extra_file_name?: string | null
+          extra_file_url?: string | null
+          extra_summary?: string | null
+          final_answer?: string | null
+          final_correct?: boolean | null
+          final_feedback?: string | null
+          full_problem_text?: string | null
+          hints_used?: number
+          id?: string
+          problem_file_name?: string | null
+          problem_file_url?: string | null
+          problem_summary?: string
+          source_file_name?: string | null
+          source_file_url?: string | null
+          source_summary?: string | null
+          status?: Database["public"]["Enums"]["session_status"]
+          title?: string
+          total_hints_planned?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      activity_type:
+        | "session_started"
+        | "session_completed"
+        | "hint_solved"
+        | "streak_milestone"
+      friendship_status: "pending" | "accepted" | "blocked"
+      session_status: "active" | "completed" | "abandoned"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -266,6 +409,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      activity_type: [
+        "session_started",
+        "session_completed",
+        "hint_solved",
+        "streak_milestone",
+      ],
+      friendship_status: ["pending", "accepted", "blocked"],
+      session_status: ["active", "completed", "abandoned"],
+    },
   },
 } as const

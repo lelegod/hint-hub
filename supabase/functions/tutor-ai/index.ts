@@ -10,7 +10,7 @@ const corsHeaders = {
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
 
-type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning";
+type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem";
 
 interface Attachment {
   url: string;
@@ -164,6 +164,31 @@ const REASONING_TOOL = {
   },
 };
 
+const EXTRACT_TOOL = {
+  type: "function",
+  function: {
+    name: "extract_problem",
+    description:
+      "Extract the full problem statement from the attached files (and short notes if any). Preserve every sub-question, every equation, and structure with markdown + LaTeX math.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "A concise 3-8 word title for this problem, suitable for a session list.",
+        },
+        fullProblemText: {
+          type: "string",
+          description:
+            "The COMPLETE problem statement, in GitHub-flavored markdown. Use $...$ for inline math and $$...$$ for display math. Use \\begin{pmatrix}...\\end{pmatrix} for matrices. Use **(a)**, **(b)** style labels for sub-questions. Preserve every detail — do not summarize.",
+        },
+      },
+      required: ["title", "fullProblemText"],
+      additionalProperties: false,
+    },
+  },
+};
+
 const CONN_TOOL = {
   type: "function",
   function: {
@@ -253,6 +278,13 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       `Evaluate the student's WRITTEN REASONING above. Be specific: comment on what they got right, where their thinking went off, ` +
       `and any misconception you can spot in their words. Quote a short phrase from their reasoning when you can. ` +
       `Do not just restate the textbook explanation.`;
+  } else if (b.mode === "extract_problem") {
+    userText =
+      `${ctx}\n\n` +
+      `Extract the COMPLETE problem statement from the attached file(s). ` +
+      `Include every sub-question, every formula, every matrix, every constraint. ` +
+      `Format with markdown and LaTeX (use $...$ inline and $$...$$ for display, \\begin{pmatrix} for matrices). ` +
+      `Do not solve anything, do not summarize — extract the problem text faithfully.`;
   } else {
     userText =
       `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
@@ -277,6 +309,7 @@ function toolFor(mode: Mode) {
   if (mode === "hint") return HINT_TOOL;
   if (mode === "evaluate_final") return EVAL_TOOL;
   if (mode === "evaluate_reasoning") return REASONING_TOOL;
+  if (mode === "extract_problem") return EXTRACT_TOOL;
   return CONN_TOOL;
 }
 
