@@ -1,7 +1,9 @@
-import { BookOpen, CheckCircle2, HelpCircle, Loader2, Send, XCircle } from "lucide-react";
+import { useState } from "react";
+import { BookOpen, CheckCircle2, HelpCircle, Loader2, Send, XCircle, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import type { TutorSession } from "@/hooks/useTutorSession";
 import { RichText } from "./RichText";
 
@@ -9,9 +11,16 @@ interface Props {
   session: TutorSession;
 }
 
+const FINAL_MCQ_OPTIONS = ["Paper 1", "Paper 2", "Paper 3", "Paper 4"];
+const FINAL_MCQ_CORRECT = 3; // Paper 4 (index 3)
+
 export function FinalAnswerBox({ session }: Props) {
   const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startConnectionGame, problemSummary, fullExtractedProblemText } = session;
   const originalProblem = fullExtractedProblemText?.trim() || problemSummary?.trim() || "";
+
+  const [mcqChoice, setMcqChoice] = useState<number | null>(null);
+  const mcqAnswered = mcqChoice !== null;
+  const mcqCorrect = mcqChoice === FINAL_MCQ_CORRECT;
 
   if (status === "completed" && finalEval?.correct) {
     return (
