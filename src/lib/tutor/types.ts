@@ -4,7 +4,8 @@ export type SessionStatus =
   | "awaiting_final"
   | "evaluating"
   | "completed"
-  | "connection_game";
+  | "connection_game"
+  | "match_game";
 
 export interface UploadedFileMeta {
   name: string;
@@ -56,4 +57,10 @@ export interface ConnectionGroup {
   theme: string;
   terms: string[];
   explanation: string;
+}
+
+export interface MatchPair {
+  left: string;
+  right: string;
+  kind: "synonym" | "definition";
 }
