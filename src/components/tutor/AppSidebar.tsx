@@ -31,11 +31,12 @@ interface Props {
   history: HistoryItem[];
   friends: FriendUpdate[];
   onNewSession: () => void;
+  onOpenSession: (id: string) => void;
 }
 
 type Tab = "history" | "friends";
 
-export function AppSidebar({ history, friends, onNewSession }: Props) {
+export function AppSidebar({ history, friends, onNewSession, onOpenSession }: Props) {
   const isMobile = useIsMobile();
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
