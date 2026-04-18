@@ -372,6 +372,8 @@ export function useTutorSession() {
             })
             .eq("id", sessionRowId);
         }
+        // Clear current activity on completion
+        void supabase.rpc("set_my_activity", { _activity: "" });
       } else {
         if (sessionRowId) {
           await supabase
@@ -424,6 +426,7 @@ export function useTutorSession() {
     setErrorMsg(null);
     setSessionRowId(null);
     setFullExtractedProblemText("");
+    void supabase.rpc("set_my_activity", { _activity: "" });
   }, []);
 
   return {
