@@ -36,14 +36,14 @@ export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
       pairIndex: i,
       side: "left",
     }));
-    const rs: Item[] = pairs.map((p, i) => ({
+    const rs: Item[] = safePairs.map((p, i) => ({
       id: `R${i}`,
       text: p.right,
       pairIndex: i,
       side: "right",
     }));
     return { lefts: shuffle(ls), rights: shuffle(rs) };
-  }, [pairs]);
+  }, [safePairs]);
 
   const [selectedLeft, setSelectedLeft] = useState<Item | null>(null);
   const [selectedRight, setSelectedRight] = useState<Item | null>(null);
