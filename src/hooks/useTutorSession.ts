@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   ConnectionGroup,
@@ -9,9 +9,16 @@ import type {
   UploadedFileMeta,
   UploadedFiles,
 } from "@/lib/tutor/types";
-import { buildAttachments, evaluateFinal, evaluateReasoning, fetchConnectionGame, requestHint } from "@/lib/tutor/api";
-import { initialFriends, initialHistory, type FriendUpdate, type HistoryItem } from "@/lib/tutor/mockData";
+import {
+  buildAttachments,
+  evaluateFinal,
+  evaluateReasoning,
+  extractProblemFromFiles,
+  fetchConnectionGame,
+  requestHint,
+} from "@/lib/tutor/api";
 import { useGamification } from "@/hooks/useGamification";
+import { useSessionsAndFriends } from "@/hooks/useSessionsAndFriends";
 
 const emptyFiles: UploadedFiles = {
   problemPdf: null,
@@ -34,6 +41,7 @@ function newEntry(c: MicroChallenge): HintEntry {
 
 export function useTutorSession() {
   const game = useGamification();
+  const sessionsHook = useSessionsAndFriends();
 
   // Setup
   const [files, setFiles] = useState<UploadedFiles>(emptyFiles);
@@ -41,23 +49,8 @@ export function useTutorSession() {
   const [problemSummary, setProblemSummary] = useState("");
   const [sourceSummary, setSourceSummary] = useState("");
   const [extraSummary, setExtraSummary] = useState("");
-  const [fullExtractedProblemText, setFullExtractedProblemText] = useState<string>(
-    `### Exercise A — Eigenvector Centrality on a Directed Network
-
-Consider a directed graph $G = (V, E)$ with $n = 5$ nodes representing a small citation network between research papers. The adjacency matrix $A$ is given by:
-
-$$
-A = \\begin{pmatrix} 0 & 1 & 1 & 0 & 0 \\\\ 0 & 0 & 1 & 1 & 0 \\\\ 0 & 0 & 0 & 1 & 1 \\\\ 1 & 0 & 0 & 0 & 1 \\\\ 0 & 1 & 0 & 0 & 0 \\end{pmatrix}
-$$
-
-where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
-
-**(a)** Recall that the eigenvector centrality $x$ of a graph satisfies the equation $A x = \\lambda x$, where $\\lambda$ is the largest eigenvalue of $A$ (the Perron–Frobenius eigenvalue). Explain in 2–3 sentences why we specifically choose the largest eigenvalue, and what guarantees its existence and uniqueness for this matrix.
-
-**(b)** Compute the dominant eigenvalue $\\lambda$ and the corresponding eigenvector $x$ by performing $4$ iterations of the power method, starting from the uniform vector $x^{(0)} = (1, 1, 1, 1, 1)^\\top / \\sqrt{5}$. Show your intermediate vectors after normalization at each step.
-
-**(c)** Rank the $5$ papers from most to least central according to your computed eigenvector. Briefly interpret the result: which paper is the "most influential" in this network, and why does the eigenvector centrality reward it more than simple in-degree counting would?`,
-  );
+  // The full extracted problem text (from uploaded file, AI-extracted at session start)
+  const [fullExtractedProblemText, setFullExtractedProblemText] = useState<string>("");
 
   // Session
   const [status, setStatus] = useState<SessionStatus>("setup");
@@ -66,6 +59,9 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
   const [loadingHint, setLoadingHint] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Persistent session row id
+  const [sessionRowId, setSessionRowId] = useState<string | null>(null);
+
   // Final
   const [finalAnswer, setFinalAnswer] = useState("");
   const [finalEval, setFinalEval] = useState<FinalEvaluation | null>(null);
@@ -73,9 +69,10 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
   // Connection game
   const [connection, setConnection] = useState<{ groups: ConnectionGroup[] } | null>(null);
 
-  // Sidebar mock
-  const [history, setHistory] = useState<HistoryItem[]>(initialHistory);
-  const [friends] = useState<FriendUpdate[]>(initialFriends);
+  // Re-fetch sessions list when this session completes
+  useEffect(() => {
+    if (status === "completed") void sessionsHook.refresh();
+  }, [status, sessionsHook]);
 
   // ----- File upload -----
   const uploadFile = useCallback(
@@ -115,9 +112,7 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
       setErrorMsg("Please describe the problem briefly so the tutor knows what to work on.");
       return;
     }
-    // Touch streak on the first session of the day
     void game.touchStreak();
-    // Plant a skill node from the problem topic (first ~40 chars)
     void game.practiceTopic(problemSummary.slice(0, 40));
 
     setStatus("active_hint");
@@ -127,17 +122,92 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
     setFinalAnswer("");
     setConnection(null);
     setLoadingHint(true);
+    setFullExtractedProblemText("");
+
+    // 1. Create session row in DB (only if authed)
+    let dbRowId: string | null = null;
     try {
-      const c = await requestHint({
-        problemSummary,
-        sourceSummary,
-        extraSummary,
-        totalHints,
-        hintIndex: 0,
-        previousHints: [],
-        attachments: buildAttachments(files),
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: row, error: insertErr } = await supabase
+          .from("tutor_sessions")
+          .insert({
+            user_id: user.id,
+            title: problemSummary.slice(0, 80) || "Untitled session",
+            problem_summary: problemSummary,
+            source_summary: sourceSummary || null,
+            extra_summary: extraSummary || null,
+            total_hints_planned: totalHints,
+            status: "active",
+            problem_file_url: files.problemPdf?.url ?? null,
+            problem_file_name: files.problemPdf?.name ?? null,
+            source_file_url: files.sourceMaterial?.url ?? null,
+            source_file_name: files.sourceMaterial?.name ?? null,
+            extra_file_url: files.extraFile?.url ?? null,
+            extra_file_name: files.extraFile?.name ?? null,
+          })
+          .select("id")
+          .single();
+        if (!insertErr && row) {
+          dbRowId = row.id;
+          setSessionRowId(row.id);
+          // Log start activity
+          await supabase.from("activity_events").insert({
+            user_id: user.id,
+            type: "session_started",
+            message: `started "${problemSummary.slice(0, 60) || "a new session"}"`,
+            session_id: row.id,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to persist session start", e);
+    }
+
+    // 2. If a problem file was uploaded, AI-extract the full problem text in parallel with first hint
+    const attachments = buildAttachments(files);
+    const extractPromise = files.problemPdf
+      ? extractProblemFromFiles({
+          problemSummary,
+          sourceSummary,
+          extraSummary,
+          attachments,
+        }).catch((e) => {
+          console.error("extract_problem failed", e);
+          return null;
+        })
+      : Promise.resolve(null);
+
+    try {
+      const [c, extracted] = await Promise.all([
+        requestHint({
+          problemSummary,
+          sourceSummary,
+          extraSummary,
+          totalHints,
+          hintIndex: 0,
+          previousHints: [],
+          attachments,
+        }),
+        extractPromise,
+      ]);
+
       setHints([newEntry(c)]);
+
+      // Use extracted text if available, otherwise fall back to the typed summary
+      const problemText = extracted?.fullProblemText || problemSummary;
+      setFullExtractedProblemText(problemText);
+
+      // Persist extracted text + AI title
+      if (dbRowId) {
+        await supabase
+          .from("tutor_sessions")
+          .update({
+            full_problem_text: problemText,
+            ...(extracted?.title ? { title: extracted.title } : {}),
+          })
+          .eq("id", dbRowId);
+      }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to start session");
       setStatus("setup");
@@ -161,7 +231,6 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
       if (!entry || entry.selectedIndex === null) return;
       const wasCorrect = entry.selectedIndex === entry.challenge.correctIndex;
 
-      // Mark submitted + start evaluating
       setHints((hs) =>
         hs.map((h) =>
           h.id === entryId
@@ -170,7 +239,6 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
         ),
       );
 
-      // ===== Gamification: XP + heat =====
       void game.awardHintXp(wasCorrect);
       game.bumpHeat();
 
@@ -225,12 +293,18 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
       });
       setHints((hs) => [...hs, newEntry(c)]);
       setCurrentIndex(nextIndex);
+      if (sessionRowId) {
+        await supabase
+          .from("tutor_sessions")
+          .update({ hints_used: hints.length + 1 })
+          .eq("id", sessionRowId);
+      }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to fetch next hint");
     } finally {
       setLoadingHint(false);
     }
-  }, [currentIndex, totalHints, problemSummary, sourceSummary, extraSummary, hints]);
+  }, [currentIndex, totalHints, problemSummary, sourceSummary, extraSummary, hints, files, sessionRowId]);
 
   // ----- Extra hint (when stuck on final) -----
   const requestExtraHint = useCallback(async () => {
@@ -249,12 +323,18 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
       });
       setHints((hs) => [...hs, newEntry(c)]);
       setCurrentIndex(hints.length);
+      if (sessionRowId) {
+        await supabase
+          .from("tutor_sessions")
+          .update({ hints_used: hints.length + 1 })
+          .eq("id", sessionRowId);
+      }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to fetch extra hint");
     } finally {
       setLoadingHint(false);
     }
-  }, [hints, problemSummary, sourceSummary, extraSummary]);
+  }, [hints, problemSummary, sourceSummary, extraSummary, files, sessionRowId]);
 
   // ----- Final submission -----
   const submitFinal = useCallback(async () => {
@@ -272,28 +352,40 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
       setFinalEval(result);
       if (result.correct) {
         setStatus("completed");
-        // ===== Gamification: session-complete bonus =====
         void game.awardSessionComplete();
         game.bumpHeat();
-        // append to history
-        setHistory((h) => [
-          {
-            id: crypto.randomUUID(),
-            title: problemSummary.slice(0, 60) || "Untitled session",
-            hintsUsed: hints.length,
-            completedAt: "Just now",
-          },
-          ...h,
-        ]);
+
+        if (sessionRowId) {
+          await supabase
+            .from("tutor_sessions")
+            .update({
+              status: "completed",
+              final_answer: finalAnswer,
+              final_correct: true,
+              final_feedback: result.feedback,
+              hints_used: hints.length,
+              completed_at: new Date().toISOString(),
+            })
+            .eq("id", sessionRowId);
+        }
       } else {
-        // incorrect: auto add another hint and return to active loop
+        if (sessionRowId) {
+          await supabase
+            .from("tutor_sessions")
+            .update({
+              final_answer: finalAnswer,
+              final_correct: false,
+              final_feedback: result.feedback,
+            })
+            .eq("id", sessionRowId);
+        }
         await requestExtraHint();
       }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to evaluate answer");
       setStatus("awaiting_final");
     }
-  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint, files, game]);
+  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint, files, game, sessionRowId]);
 
   // ----- Connection game -----
   const startConnectionGame = useCallback(async () => {
@@ -312,7 +404,7 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
       setErrorMsg(e instanceof Error ? e.message : "Failed to load connection game");
       setStatus("completed");
     }
-  }, [problemSummary, sourceSummary, extraSummary, hints]);
+  }, [problemSummary, sourceSummary, extraSummary, hints, files]);
 
   const resetSession = useCallback(() => {
     setFiles(emptyFiles);
@@ -326,6 +418,8 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
     setFinalEval(null);
     setConnection(null);
     setErrorMsg(null);
+    setSessionRowId(null);
+    setFullExtractedProblemText("");
   }, []);
 
   return {
@@ -364,9 +458,9 @@ where \`A[i][j] = 1\` indicates that paper $i$ cites paper $j$.
     // connection game
     connection,
     startConnectionGame,
-    // sidebar
-    history,
-    friends,
+    // sidebar — now from real DB
+    history: sessionsHook.history,
+    friends: sessionsHook.friends,
     resetSession,
   };
 }
