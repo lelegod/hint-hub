@@ -56,10 +56,18 @@ export function FilesRail({ session }: Props) {
     >
       <button
         type="button"
-        onClick={() => setFilesOpen((o) => !o)}
+        onClick={() => {
+          if (isMobile && filesOpen) {
+            // On mobile, collapsing from open should fully hide the rail again
+            setFilesOpen(false);
+            setMobileVisible(false);
+            return;
+          }
+          setFilesOpen((o) => !o);
+        }}
         className={cn(
-          "flex items-center gap-2 px-3 py-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40",
-          filesOpen ? "justify-between" : "justify-center",
+          "flex items-center gap-2 px-2 py-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40",
+          filesOpen ? "justify-between px-3" : "justify-center",
         )}
         aria-label={filesOpen ? "Collapse files panel" : "Expand files panel"}
       >
