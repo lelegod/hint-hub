@@ -15,6 +15,7 @@ const Index = () => {
         history={session.history}
         friends={session.friends}
         onNewSession={session.resetSession}
+        onOpenSession={session.loadSession}
       />
 
       <main className="flex h-full flex-1 overflow-hidden">
