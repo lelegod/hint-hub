@@ -39,36 +39,7 @@ export function RewardOverlay() {
             tap to dismiss
           </div>
         </div>
-        {/* Confetti dots */}
-        <Dots />
       </button>
-    </div>
-  );
-}
-
-function Dots() {
-  const dots = Array.from({ length: 14 });
-  return (
-    <div className="pointer-events-none absolute inset-0">
-      {dots.map((_, i) => {
-        const angle = (i / dots.length) * Math.PI * 2;
-        const dist = 70 + ((i * 13) % 25);
-        const x = Math.cos(angle) * dist;
-        const y = Math.sin(angle) * dist;
-        const colors = ["bg-primary", "bg-accent", "bg-warning", "bg-success"];
-        return (
-          <span
-            key={i}
-            className={cn("absolute left-1/2 top-1/2 h-2 w-2 rounded-full opacity-0 animate-pop-in", colors[i % colors.length])}
-            style={{
-              transform: `translate(calc(${x}px - 50%), calc(${y}px - 50%))`,
-              animationDelay: `${i * 30}ms`,
-              animationDuration: "0.6s",
-              opacity: 0.85,
-            }}
-          />
-        );
-      })}
     </div>
   );
 }
