@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { TutorSession } from "@/hooks/useTutorSession";
 import { HintActionBox } from "./HintActionBox";
 import { FinalAnswerBox } from "./FinalAnswerBox";
+import { StatHud } from "@/components/gamification/StatHud";
 
 interface Props {
   session: TutorSession;
