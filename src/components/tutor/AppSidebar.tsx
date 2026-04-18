@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   Flame,
+  Gamepad2,
   History as HistoryIcon,
   LogIn,
   LogOut,
@@ -32,11 +33,12 @@ interface Props {
   friends: FriendUpdate[];
   onNewSession: () => void;
   onOpenSession: (id: string) => void;
+  onStartMatchGame?: () => void;
 }
 
 type Tab = "history" | "friends";
 
-export function AppSidebar({ history, friends, onNewSession, onOpenSession }: Props) {
+export function AppSidebar({ history, friends, onNewSession, onOpenSession, onStartMatchGame }: Props) {
   const isMobile = useIsMobile();
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
