@@ -19,7 +19,7 @@ export function SetupScreen({ session }: Props) {
   const canStart = session.problemSummary.trim().length > 0;
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl animate-fade-in gap-8 px-6 py-12 lg:px-10">
+    <div className="mx-auto flex min-h-full w-full max-w-6xl animate-fade-in flex-col gap-8 px-6 py-12 md:flex-row md:px-10">
       {/* Main column: question */}
       <div className="flex flex-1 flex-col">
         <div className="mb-8">
@@ -64,7 +64,7 @@ export function SetupScreen({ session }: Props) {
       </div>
 
       {/* Right rail: minimal setup */}
-      <aside className="hidden w-72 shrink-0 lg:block">
+      <aside className="w-full shrink-0 md:w-72">
         <div className="sticky top-12 space-y-4 rounded-xl border border-border bg-card/60 p-5 shadow-soft">
           <div>
             <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
