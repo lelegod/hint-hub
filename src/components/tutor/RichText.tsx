@@ -37,10 +37,15 @@ export function RichText({ children, className }: Props) {
               {children}
             </a>
           ),
-          code({ inline, className, children, ...props }: any) {
+          code({ className, children, node, ...props }: any) {
             const match = /language-(\w+)/.exec(className || "");
-            const value = String(children).replace(/\n$/, "");
-            if (!inline && match) {
+            const raw = String(children ?? "");
+            const value = raw.replace(/\n$/, "");
+            // react-markdown v9 no longer passes `inline`. Detect it ourselves:
+            // a fenced code block always has a language class OR contains newlines.
+            const isBlock = !!match || raw.includes("\n");
+
+            if (isBlock && match) {
               return (
                 <div className="my-3 overflow-hidden rounded-md border border-border bg-card text-sm">
                   <div className="flex items-center justify-between border-b border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
@@ -62,7 +67,7 @@ export function RichText({ children, className }: Props) {
                 </div>
               );
             }
-            if (!inline) {
+            if (isBlock) {
               // Fenced block without language
               return (
                 <pre className="my-3 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-sm">
@@ -70,15 +75,18 @@ export function RichText({ children, className }: Props) {
                 </pre>
               );
             }
+            // Inline code: must stay inline within the paragraph.
             return (
               <code
-                className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground"
+                className="rounded bg-muted/70 px-1.5 py-0.5 font-mono text-[0.85em] text-foreground"
                 {...props}
               >
                 {children}
               </code>
             );
           },
+          // Ensure react-markdown does not wrap our custom <pre> blocks in another <pre>
+          pre: ({ children }) => <>{children}</>,
         }}
       >
         {normalized}
