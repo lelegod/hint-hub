@@ -8,10 +8,23 @@ export interface PendingRequest {
   created_at: string;
 }
 
+export type Presence = "online" | "away" | "offline";
+
 export interface FriendRow {
   friend_user_id: string;
   friend_name: string;
   since: string;
+  last_seen_at: string | null;
+  status_emoji: string | null;
+  status_message: string | null;
+  current_activity: string | null;
+  presence: Presence;
+}
+
+export interface MyStatus {
+  status_emoji: string | null;
+  status_message: string | null;
+  current_activity: string | null;
 }
 
 export type InviteResult =
