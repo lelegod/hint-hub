@@ -64,6 +64,9 @@ export function ChatThread({ session }: Props) {
 
   return (
     <div className="flex h-full w-full flex-col">
+      {/* Gamification HUD — visible at all times when authed */}
+      <StatHud />
+
       {/* Progress bar (only after session starts) */}
       {!isSetup && (
         <div className="border-b border-border bg-card/60 px-6 py-3">
