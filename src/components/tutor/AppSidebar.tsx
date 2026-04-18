@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, History as HistoryIcon, Plus, Sparkles, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Clock, History as HistoryIcon, LogIn, LogOut, Plus, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useGamification } from "@/hooks/useGamification";
+import { supabase } from "@/integrations/supabase/client";
 import type { FriendUpdate, HistoryItem } from "@/lib/tutor/mockData";
 
 interface Props {
@@ -13,6 +16,7 @@ interface Props {
 
 export function AppSidebar({ history, friends, onNewSession }: Props) {
   const isMobile = useIsMobile();
+  const { authed } = useGamification();
   // On mobile and tablet, default to collapsed (mini) so the chat gets max room.
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<"history" | "friends">("history");
@@ -175,6 +179,24 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+
+          {/* Auth row */}
+          <div className="border-t border-sidebar-border px-3 py-3">
+            {authed ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-muted-foreground"
+                onClick={() => supabase.auth.signOut()}
+              >
+                <LogOut className="h-4 w-4" /> Sign out
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="w-full justify-start gap-2">
+                <Link to="/auth"><LogIn className="h-4 w-4" /> Sign in to track XP</Link>
+              </Button>
             )}
           </div>
         </>

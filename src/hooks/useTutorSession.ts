@@ -11,6 +11,7 @@ import type {
 } from "@/lib/tutor/types";
 import { buildAttachments, evaluateFinal, evaluateReasoning, fetchConnectionGame, requestHint } from "@/lib/tutor/api";
 import { initialFriends, initialHistory, type FriendUpdate, type HistoryItem } from "@/lib/tutor/mockData";
+import { useGamification } from "@/hooks/useGamification";
 
 const emptyFiles: UploadedFiles = {
   problemPdf: null,
@@ -32,6 +33,8 @@ function newEntry(c: MicroChallenge): HintEntry {
 }
 
 export function useTutorSession() {
+  const game = useGamification();
+
   // Setup
   const [files, setFiles] = useState<UploadedFiles>(emptyFiles);
   const [totalHints, setTotalHints] = useState(3);
@@ -95,6 +98,19 @@ export function useTutorSession() {
       setErrorMsg("Please describe the problem briefly so the tutor knows what to work on.");
       return;
     }
+    // Spend a hint token (only if signed in & has tokens)
+    if (game.authed && game.state) {
+      const ok = await game.spendHintToken();
+      if (!ok) {
+        setErrorMsg("You're out of hint tokens. They regenerate over time — come back soon!");
+        return;
+      }
+    }
+    // Touch streak on the first session of the day
+    void game.touchStreak();
+    // Plant a skill node from the problem topic (first ~40 chars)
+    void game.practiceTopic(problemSummary.slice(0, 40));
+
     setStatus("active_hint");
     setHints([]);
     setCurrentIndex(0);
@@ -119,7 +135,7 @@ export function useTutorSession() {
     } finally {
       setLoadingHint(false);
     }
-  }, [problemSummary, sourceSummary, extraSummary, totalHints]);
+  }, [problemSummary, sourceSummary, extraSummary, totalHints, files, game]);
 
   // ----- Action box mutations -----
   const selectChoice = useCallback((entryId: string, idx: number) => {
@@ -144,6 +160,10 @@ export function useTutorSession() {
             : h,
         ),
       );
+
+      // ===== Gamification: XP + heat =====
+      void game.awardHintXp(wasCorrect);
+      game.bumpHeat();
 
       try {
         const evalResult = await evaluateReasoning({
@@ -172,7 +192,7 @@ export function useTutorSession() {
         );
       }
     },
-    [hints, problemSummary, sourceSummary, extraSummary, files],
+    [hints, problemSummary, sourceSummary, extraSummary, files, game],
   );
 
   // ----- Continue to next hint or move to final -----
@@ -243,6 +263,9 @@ export function useTutorSession() {
       setFinalEval(result);
       if (result.correct) {
         setStatus("completed");
+        // ===== Gamification: session-complete bonus =====
+        void game.awardSessionComplete();
+        game.bumpHeat();
         // append to history
         setHistory((h) => [
           {
@@ -261,7 +284,7 @@ export function useTutorSession() {
       setErrorMsg(e instanceof Error ? e.message : "Failed to evaluate answer");
       setStatus("awaiting_final");
     }
-  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint]);
+  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint, files, game]);
 
   // ----- Connection game -----
   const startConnectionGame = useCallback(async () => {

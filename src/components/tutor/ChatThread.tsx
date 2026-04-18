@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { TutorSession } from "@/hooks/useTutorSession";
 import { HintActionBox } from "./HintActionBox";
 import { FinalAnswerBox } from "./FinalAnswerBox";
+import { StatHud } from "@/components/gamification/StatHud";
 
 interface Props {
   session: TutorSession;
@@ -63,6 +64,9 @@ export function ChatThread({ session }: Props) {
 
   return (
     <div className="flex h-full w-full flex-col">
+      {/* Gamification HUD — visible at all times when authed */}
+      <StatHud />
+
       {/* Progress bar (only after session starts) */}
       {!isSetup && (
         <div className="border-b border-border bg-card/60 px-6 py-3">
