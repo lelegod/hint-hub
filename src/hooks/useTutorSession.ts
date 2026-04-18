@@ -304,6 +304,13 @@ export function useTutorSession() {
         ),
       );
 
+      void persistHintUpdate(entryId, {
+        submitted: true,
+        was_correct: wasCorrect,
+        selected_index: entry.selectedIndex,
+        reasoning: entry.reasoning,
+      });
+
       void game.awardHintXp(wasCorrect);
       game.bumpHeat();
 
@@ -327,6 +334,9 @@ export function useTutorSession() {
               : h,
           ),
         );
+        void persistHintUpdate(entryId, {
+          reasoning_eval: evalResult as unknown as Json,
+        });
       } catch (e) {
         console.error("evaluateReasoning failed", e);
         setHints((hs) =>
