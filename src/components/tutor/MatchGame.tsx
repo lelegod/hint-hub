@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { MatchPair } from "@/lib/tutor/types";
 
 interface Props {
-  pairs: MatchPair[];
+  pairs?: MatchPair[];
   onRestart: () => void;
   onPlayAgain?: () => void;
 }
@@ -28,8 +28,9 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
+  const safePairs = pairs ?? [];
   const { lefts, rights } = useMemo(() => {
-    const ls: Item[] = pairs.map((p, i) => ({
+    const ls: Item[] = safePairs.map((p, i) => ({
       id: `L${i}`,
       text: p.left,
       pairIndex: i,
