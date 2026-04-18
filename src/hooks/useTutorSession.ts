@@ -98,6 +98,19 @@ export function useTutorSession() {
       setErrorMsg("Please describe the problem briefly so the tutor knows what to work on.");
       return;
     }
+    // Spend a hint token (only if signed in & has tokens)
+    if (game.authed && game.state) {
+      const ok = await game.spendHintToken();
+      if (!ok) {
+        setErrorMsg("You're out of hint tokens. They regenerate over time — come back soon!");
+        return;
+      }
+    }
+    // Touch streak on the first session of the day
+    void game.touchStreak();
+    // Plant a skill node from the problem topic (first ~40 chars)
+    void game.practiceTopic(problemSummary.slice(0, 40));
+
     setStatus("active_hint");
     setHints([]);
     setCurrentIndex(0);
@@ -122,7 +135,7 @@ export function useTutorSession() {
     } finally {
       setLoadingHint(false);
     }
-  }, [problemSummary, sourceSummary, extraSummary, totalHints]);
+  }, [problemSummary, sourceSummary, extraSummary, totalHints, files, game]);
 
   // ----- Action box mutations -----
   const selectChoice = useCallback((entryId: string, idx: number) => {
