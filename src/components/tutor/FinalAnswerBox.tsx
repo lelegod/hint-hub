@@ -46,9 +46,7 @@ export function FinalAnswerBox({ session }: Props) {
             <BookOpen className="h-3.5 w-3.5" />
             Original problem
           </div>
-          <div className="max-h-48 overflow-y-auto pr-2">
-            <RichText className="whitespace-pre-wrap text-sm text-foreground">{originalProblem}</RichText>
-          </div>
+          <RichText className="text-sm text-foreground">{originalProblem}</RichText>
         </div>
       )}
 
