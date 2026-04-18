@@ -33,6 +33,8 @@ function newEntry(c: MicroChallenge): HintEntry {
 }
 
 export function useTutorSession() {
+  const game = useGamification();
+
   // Setup
   const [files, setFiles] = useState<UploadedFiles>(emptyFiles);
   const [totalHints, setTotalHints] = useState(3);
