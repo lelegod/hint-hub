@@ -168,6 +168,15 @@ export default function Auth() {
           <p className="text-sm text-muted-foreground">{headerSub}</p>
         </div>
 
+        {inviteToken && mode === "signup" && (
+          <div className="mb-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary-soft p-3 text-sm text-foreground">
+            <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>
+              You've been invited to join Tutorly. Sign up and you'll be friends automatically.
+            </span>
+          </div>
+        )}
+
         {(mode === "signin" || mode === "signup") && (
           <>
             <form onSubmit={submit} className="space-y-4">
