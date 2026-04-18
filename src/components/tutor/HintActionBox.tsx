@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, BookMarked, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
+import { ArrowRight, BookMarked, CheckCircle2, Lightbulb, Loader2, MessageSquareQuote, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
