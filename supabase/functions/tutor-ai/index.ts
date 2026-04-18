@@ -10,7 +10,7 @@ const corsHeaders = {
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
 
-type Mode = "hint" | "evaluate_final" | "connection_game";
+type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning";
 
 interface Attachment {
   url: string;
@@ -31,6 +31,12 @@ interface Body {
   studentReasoning?: string;
   context?: string;
   attachments?: Attachment[];
+  // For evaluate_reasoning
+  hintText?: string;
+  microChallenge?: string;
+  choices?: string[];
+  correctIndex?: number;
+  selectedIndex?: number;
 }
 
 // Fetch each attachment and convert to a data URL the AI gateway can consume.
@@ -119,6 +125,40 @@ const EVAL_TOOL = {
         },
       },
       required: ["correct", "feedback", "whereWentWrong"],
+      additionalProperties: false,
+    },
+  },
+};
+
+const REASONING_TOOL = {
+  type: "function",
+  function: {
+    name: "evaluate_reasoning",
+    description:
+      "Evaluate the student's written reasoning for their multiple-choice answer. Comment on what is correct, what is missing, and any misconceptions.",
+    parameters: {
+      type: "object",
+      properties: {
+        choiceCorrect: {
+          type: "boolean",
+          description: "Whether the multiple-choice selection itself was correct",
+        },
+        reasoningQuality: {
+          type: "string",
+          enum: ["strong", "partial", "weak"],
+          description: "How well the student's written reasoning supports their answer",
+        },
+        feedback: {
+          type: "string",
+          description:
+            "2-4 sentences of specific, encouraging feedback DIRECTLY ABOUT the student's reasoning text. Quote a short phrase from their reasoning when possible. Do not just restate the correct explanation.",
+        },
+        suggestion: {
+          type: "string",
+          description: "One concrete suggestion to improve their thinking, or empty string",
+        },
+      },
+      required: ["choiceCorrect", "reasoningQuality", "feedback", "suggestion"],
       additionalProperties: false,
     },
   },
