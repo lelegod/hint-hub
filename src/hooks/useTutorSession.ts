@@ -4,6 +4,7 @@ import type {
   ConnectionGroup,
   FinalEvaluation,
   HintEntry,
+  MatchPair,
   MicroChallenge,
   SessionStatus,
   UploadedFileMeta,
@@ -15,6 +16,7 @@ import {
   evaluateReasoning,
   extractProblemFromFiles,
   fetchConnectionGame,
+  fetchMatchGame,
   requestHint,
 } from "@/lib/tutor/api";
 import { useGamification } from "@/hooks/useGamification";
@@ -68,6 +70,10 @@ export function useTutorSession() {
 
   // Connection game
   const [connection, setConnection] = useState<{ groups: ConnectionGroup[] } | null>(null);
+
+  // Match mini-game
+  const [match, setMatch] = useState<{ pairs: MatchPair[] } | null>(null);
+  const [previousStatus, setPreviousStatus] = useState<SessionStatus>("setup");
 
   // Re-fetch sessions list when this session completes
   useEffect(() => {
@@ -414,6 +420,32 @@ export function useTutorSession() {
     }
   }, [problemSummary, sourceSummary, extraSummary, hints, files]);
 
+  // ----- Match mini-game (sidebar tab) -----
+  const startMatchGame = useCallback(async () => {
+    setErrorMsg(null);
+    setPreviousStatus(status);
+    setStatus("match_game");
+    setMatch(null);
+    try {
+      const result = await fetchMatchGame({
+        problemSummary,
+        sourceSummary,
+        extraSummary,
+        previousHints: hints.map((h) => h.challenge.hint),
+        attachments: buildAttachments(files),
+      });
+      setMatch(result);
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Failed to load match game");
+      setStatus(previousStatus);
+    }
+  }, [problemSummary, sourceSummary, extraSummary, hints, files, status, previousStatus]);
+
+  const closeMatchGame = useCallback(() => {
+    setMatch(null);
+    setStatus(previousStatus === "match_game" ? "setup" : previousStatus);
+  }, [previousStatus]);
+
   // ----- Load an existing session from DB (resume or view) -----
   const loadSession = useCallback(async (id: string) => {
     setErrorMsg(null);
@@ -523,6 +555,7 @@ export function useTutorSession() {
     setFinalAnswer("");
     setFinalEval(null);
     setConnection(null);
+    setMatch(null);
     setErrorMsg(null);
     setSessionRowId(null);
     setFullExtractedProblemText("");
@@ -565,6 +598,10 @@ export function useTutorSession() {
     // connection game
     connection,
     startConnectionGame,
+    // match mini-game
+    match,
+    startMatchGame,
+    closeMatchGame,
     // sidebar — now from real DB
     history: sessionsHook.history,
     friends: sessionsHook.friends,

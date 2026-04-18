@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   Flame,
+  Gamepad2,
   History as HistoryIcon,
   LogIn,
   LogOut,
@@ -32,11 +33,12 @@ interface Props {
   friends: FriendUpdate[];
   onNewSession: () => void;
   onOpenSession: (id: string) => void;
+  onStartMatchGame?: () => void;
 }
 
 type Tab = "history" | "friends";
 
-export function AppSidebar({ history, friends, onNewSession, onOpenSession }: Props) {
+export function AppSidebar({ history, friends, onNewSession, onOpenSession, onStartMatchGame }: Props) {
   const isMobile = useIsMobile();
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
@@ -120,6 +122,17 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession }: Pr
           >
             <Plus className="h-4 w-4" />
           </Button>
+          {onStartMatchGame && (
+            <button
+              type="button"
+              onClick={onStartMatchGame}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-accent transition-colors hover:bg-accent hover:text-accent-foreground"
+              aria-label="Play mini game"
+              title="Play mini game"
+            >
+              <Gamepad2 className="h-4 w-4" />
+            </button>
+          )}
           {authed && pendingCount > 0 && (
             <button
               type="button"
@@ -151,6 +164,15 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession }: Pr
         <>
           <div className="space-y-2 px-3 py-3">
             <Button onClick={onNewSession} className="w-full">New session</Button>
+            {onStartMatchGame && (
+              <Button
+                onClick={onStartMatchGame}
+                variant="outline"
+                className="w-full gap-2 border-accent/30 bg-accent-soft text-accent hover:bg-accent hover:text-accent-foreground"
+              >
+                <Gamepad2 className="h-4 w-4" /> Mini game
+              </Button>
+            )}
             {authed && (
               <div className="flex items-center justify-between gap-2">
                 <AddFriendDialog
