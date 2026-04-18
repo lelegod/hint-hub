@@ -344,6 +344,8 @@ where A[i][j] = 1 indicates that paper i cites paper j.
     extraSummary,
     setExtraSummary,
     setSummary,
+    fullExtractedProblemText,
+    setFullExtractedProblemText,
     // session
     status,
     hints,
