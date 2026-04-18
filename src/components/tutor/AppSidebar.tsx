@@ -31,7 +31,8 @@ interface Props {
   onNewSession: () => void;
 }
 
-type Tab = "history" | "friends" | "requests";
+type Tab = "history" | "friends";
+type FriendsSubTab = "friends" | "requests";
 
 export function AppSidebar({ history, friends, onNewSession }: Props) {
   const isMobile = useIsMobile();
@@ -41,6 +42,7 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
 
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<Tab>("history");
+  const [friendsSubTab, setFriendsSubTab] = useState<FriendsSubTab>("friends");
 
   useEffect(() => {
     setCollapsed(true);
@@ -121,7 +123,8 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
               type="button"
               onClick={() => {
                 setCollapsed(false);
-                setTab("requests");
+                setTab("friends");
+                setFriendsSubTab("requests");
               }}
               className="relative flex h-8 w-8 items-center justify-center rounded-full border border-primary/30 bg-primary-soft text-primary"
               aria-label={`${pendingCount} friend requests`}
@@ -165,27 +168,46 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
           </div>
 
           {/* Tabs */}
-          <div className="mx-3 grid grid-cols-3 rounded-md bg-sidebar-accent p-1 text-xs">
+          <div className="mx-3 grid grid-cols-2 rounded-md bg-sidebar-accent p-1 text-xs">
             <TabButton active={tab === "history"} onClick={() => setTab("history")} icon={<HistoryIcon className="h-3 w-3" />} label="History" />
-            <TabButton active={tab === "friends"} onClick={() => setTab("friends")} icon={<Users className="h-3 w-3" />} label="Friends" />
             <TabButton
-              active={tab === "requests"}
-              onClick={() => setTab("requests")}
-              icon={<Bell className="h-3 w-3" />}
-              label="Requests"
+              active={tab === "friends"}
+              onClick={() => setTab("friends")}
+              icon={<Users className="h-3 w-3" />}
+              label="Friends"
               badge={pendingCount > 0 ? pendingCount : undefined}
             />
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-3">
             {tab === "history" && <HistoryList history={history} />}
-            {tab === "friends" && <FriendsList friends={friendsHook.friends} feed={friends} />}
-            {tab === "requests" && (
-              <RequestsList
-                requests={friendsHook.pending}
-                onAccept={friendsHook.acceptRequest}
-                onDecline={friendsHook.declineRequest}
-              />
+            {tab === "friends" && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 rounded-md bg-sidebar-accent p-1 text-xs">
+                  <TabButton
+                    active={friendsSubTab === "friends"}
+                    onClick={() => setFriendsSubTab("friends")}
+                    icon={<Users className="h-3 w-3" />}
+                    label="Friends"
+                  />
+                  <TabButton
+                    active={friendsSubTab === "requests"}
+                    onClick={() => setFriendsSubTab("requests")}
+                    icon={<Bell className="h-3 w-3" />}
+                    label="Requests"
+                    badge={pendingCount > 0 ? pendingCount : undefined}
+                  />
+                </div>
+                {friendsSubTab === "friends" ? (
+                  <FriendsList friends={friendsHook.friends} feed={friends} />
+                ) : (
+                  <RequestsList
+                    requests={friendsHook.pending}
+                    onAccept={friendsHook.acceptRequest}
+                    onDecline={friendsHook.declineRequest}
+                  />
+                )}
+              </div>
             )}
           </div>
 
