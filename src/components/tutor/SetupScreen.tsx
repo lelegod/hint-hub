@@ -32,7 +32,7 @@ export function SetupScreen({ session }: Props) {
           <h1 className="text-center font-serif text-4xl leading-tight text-foreground sm:text-5xl">
             Hey!
             <br />
-            <span className="text-muted-foreground">What should we learn about today?</span>
+            <span className="text-muted-foreground">What should we learn for today?</span>
           </h1>
 
           <form onSubmit={handleSubmit} className="mt-12">
@@ -145,11 +145,7 @@ export function SetupScreen({ session }: Props) {
                     min={1}
                     max={10}
                     value={session.totalHints}
-                    onChange={(e) =>
-                      session.setTotalHints(
-                        Math.max(1, Math.min(10, Number(e.target.value) || 1)),
-                      )
-                    }
+                    onChange={(e) => session.setTotalHints(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
                     className="h-9"
                   />
                 </div>
