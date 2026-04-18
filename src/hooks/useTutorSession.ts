@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import type {
   ConnectionGroup,
   FinalEvaluation,
@@ -28,9 +29,9 @@ const emptyFiles: UploadedFiles = {
   extraFile: null,
 };
 
-function newEntry(c: MicroChallenge): HintEntry {
+function newEntry(c: MicroChallenge, dbId?: string): HintEntry {
   return {
-    id: crypto.randomUUID(),
+    id: dbId ?? crypto.randomUUID(),
     challenge: c,
     selectedIndex: null,
     reasoning: "",
@@ -39,6 +40,55 @@ function newEntry(c: MicroChallenge): HintEntry {
     reasoningEval: null,
     evaluatingReasoning: false,
   };
+}
+
+// Persist a newly created hint entry to the DB. Returns the DB row id (or null on failure).
+async function persistNewHint(
+  sessionId: string | null,
+  hintIndex: number,
+  challenge: MicroChallenge,
+): Promise<string | null> {
+  if (!sessionId) return null;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from("hint_entries")
+      .insert([
+        {
+          session_id: sessionId,
+          user_id: user.id,
+          hint_index: hintIndex,
+          challenge: challenge as unknown as Json,
+        },
+      ])
+      .select("id")
+      .single();
+    if (error) {
+      console.error("persistNewHint failed", error);
+      return null;
+    }
+    return data.id;
+  } catch (e) {
+    console.error("persistNewHint error", e);
+    return null;
+  }
+}
+
+type HintUpdatePatch = Partial<{
+  selected_index: number | null;
+  reasoning: string;
+  submitted: boolean;
+  was_correct: boolean | null;
+  reasoning_eval: Json;
+}>;
+
+async function persistHintUpdate(entryId: string, patch: HintUpdatePatch) {
+  try {
+    await supabase.from("hint_entries").update(patch).eq("id", entryId);
+  } catch (e) {
+    console.error("persistHintUpdate error", e);
+  }
 }
 
 export function useTutorSession() {
@@ -204,7 +254,8 @@ export function useTutorSession() {
         extractPromise,
       ]);
 
-      setHints([newEntry(c)]);
+      const dbHintId = await persistNewHint(dbRowId, 0, c);
+      setHints([newEntry(c, dbHintId ?? undefined)]);
 
       // Use extracted text if available, otherwise fall back to the typed summary
       const problemText = extracted?.fullProblemText || problemSummary;
@@ -231,10 +282,12 @@ export function useTutorSession() {
   // ----- Action box mutations -----
   const selectChoice = useCallback((entryId: string, idx: number) => {
     setHints((hs) => hs.map((h) => (h.id === entryId ? { ...h, selectedIndex: idx } : h)));
+    void persistHintUpdate(entryId, { selected_index: idx });
   }, []);
 
   const setReasoning = useCallback((entryId: string, text: string) => {
     setHints((hs) => hs.map((h) => (h.id === entryId ? { ...h, reasoning: text } : h)));
+    void persistHintUpdate(entryId, { reasoning: text });
   }, []);
 
   const submitChoice = useCallback(
@@ -250,6 +303,13 @@ export function useTutorSession() {
             : h,
         ),
       );
+
+      void persistHintUpdate(entryId, {
+        submitted: true,
+        was_correct: wasCorrect,
+        selected_index: entry.selectedIndex,
+        reasoning: entry.reasoning,
+      });
 
       void game.awardHintXp(wasCorrect);
       game.bumpHeat();
@@ -274,6 +334,9 @@ export function useTutorSession() {
               : h,
           ),
         );
+        void persistHintUpdate(entryId, {
+          reasoning_eval: evalResult as unknown as Json,
+        });
       } catch (e) {
         console.error("evaluateReasoning failed", e);
         setHints((hs) =>
@@ -303,7 +366,8 @@ export function useTutorSession() {
         previousHints: hints.map((h) => h.challenge.hint),
         attachments: buildAttachments(files),
       });
-      setHints((hs) => [...hs, newEntry(c)]);
+      const dbHintId = await persistNewHint(sessionRowId, nextIndex, c);
+      setHints((hs) => [...hs, newEntry(c, dbHintId ?? undefined)]);
       setCurrentIndex(nextIndex);
       if (sessionRowId) {
         await supabase
@@ -333,7 +397,8 @@ export function useTutorSession() {
         previousHints: hints.map((h) => h.challenge.hint),
         attachments: buildAttachments(files),
       });
-      setHints((hs) => [...hs, newEntry(c)]);
+      const dbHintId = await persistNewHint(sessionRowId, hints.length, c);
+      setHints((hs) => [...hs, newEntry(c, dbHintId ?? undefined)]);
       setCurrentIndex(hints.length);
       if (sessionRowId) {
         await supabase
@@ -484,8 +549,28 @@ export function useTutorSession() {
       setCurrentIndex(0);
       setConnection(null);
 
+      // Load any saved hint entries for this session
+      const { data: savedHints } = await supabase
+        .from("hint_entries")
+        .select("*")
+        .eq("session_id", row.id)
+        .order("hint_index", { ascending: true });
+
+      const restored: HintEntry[] = (savedHints ?? []).map((h) => ({
+        id: h.id,
+        challenge: h.challenge as unknown as MicroChallenge,
+        selectedIndex: h.selected_index ?? null,
+        reasoning: h.reasoning ?? "",
+        submitted: h.submitted ?? false,
+        wasCorrect: h.was_correct ?? null,
+        reasoningEval: (h.reasoning_eval as unknown as HintEntry["reasoningEval"]) ?? null,
+        evaluatingReasoning: false,
+      }));
+
       if (row.status === "completed") {
-        // Show the completed final-answer screen
+        // Show the completed final-answer screen with all hints visible
+        setHints(restored);
+        setCurrentIndex(Math.max(0, restored.length - 1));
         setFinalAnswer(row.final_answer ?? "");
         setFinalEval(
           row.final_feedback
@@ -501,10 +586,11 @@ export function useTutorSession() {
         return;
       }
 
-      // Active session: re-fetch a fresh hint at the right position so the user can continue
+      // Active session
       setFinalAnswer(row.final_answer ?? "");
       setFinalEval(null);
-      const hintIndex = Math.min(row.hints_used ?? 0, (row.total_hints_planned ?? 3) - 1);
+
+      const totalPlanned = row.total_hints_planned ?? 3;
       const attachments = buildAttachments({
         problemPdf: row.problem_file_url
           ? { name: row.problem_file_name ?? "problem", url: row.problem_file_url, mime: "", size: 0 }
@@ -517,7 +603,21 @@ export function useTutorSession() {
           : null,
       });
 
-      if ((row.hints_used ?? 0) >= (row.total_hints_planned ?? 3)) {
+      // Have saved hints — replay them, no AI call needed
+      if (restored.length > 0) {
+        setHints(restored);
+        setCurrentIndex(restored.length - 1);
+        if (restored.length >= totalPlanned && restored.every((h) => h.submitted)) {
+          setStatus("awaiting_final");
+        } else {
+          setStatus("active_hint");
+        }
+        setLoadingHint(false);
+        return;
+      }
+
+      // Legacy session with no saved hints — fetch a fresh one
+      if ((row.hints_used ?? 0) >= totalPlanned) {
         setStatus("awaiting_final");
         setLoadingHint(false);
         return;
@@ -529,12 +629,13 @@ export function useTutorSession() {
           problemSummary: row.problem_summary ?? "",
           sourceSummary: row.source_summary ?? "",
           extraSummary: row.extra_summary ?? "",
-          totalHints: row.total_hints_planned ?? 3,
-          hintIndex,
+          totalHints: totalPlanned,
+          hintIndex: 0,
           previousHints: [],
           attachments,
         });
-        setHints([newEntry(c)]);
+        const dbHintId = await persistNewHint(row.id, 0, c);
+        setHints([newEntry(c, dbHintId ?? undefined)]);
         setCurrentIndex(0);
       } catch (e) {
         setErrorMsg(e instanceof Error ? e.message : "Failed to load hint");

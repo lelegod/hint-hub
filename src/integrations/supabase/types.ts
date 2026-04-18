@@ -163,6 +163,59 @@ export type Database = {
         }
         Relationships: []
       }
+      hint_entries: {
+        Row: {
+          challenge: Json
+          created_at: string
+          hint_index: number
+          id: string
+          reasoning: string
+          reasoning_eval: Json | null
+          selected_index: number | null
+          session_id: string
+          submitted: boolean
+          updated_at: string
+          user_id: string
+          was_correct: boolean | null
+        }
+        Insert: {
+          challenge: Json
+          created_at?: string
+          hint_index: number
+          id?: string
+          reasoning?: string
+          reasoning_eval?: Json | null
+          selected_index?: number | null
+          session_id: string
+          submitted?: boolean
+          updated_at?: string
+          user_id: string
+          was_correct?: boolean | null
+        }
+        Update: {
+          challenge?: Json
+          created_at?: string
+          hint_index?: number
+          id?: string
+          reasoning?: string
+          reasoning_eval?: Json | null
+          selected_index?: number | null
+          session_id?: string
+          submitted?: boolean
+          updated_at?: string
+          user_id?: string
+          was_correct?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hint_entries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
