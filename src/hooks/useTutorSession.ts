@@ -130,19 +130,50 @@ export function useTutorSession() {
     setHints((hs) => hs.map((h) => (h.id === entryId ? { ...h, reasoning: text } : h)));
   }, []);
 
-  const submitChoice = useCallback((entryId: string) => {
-    setHints((hs) =>
-      hs.map((h) =>
-        h.id === entryId
-          ? {
-              ...h,
-              submitted: true,
-              wasCorrect: h.selectedIndex === h.challenge.correctIndex,
-            }
-          : h,
-      ),
-    );
-  }, []);
+  const submitChoice = useCallback(
+    async (entryId: string) => {
+      const entry = hints.find((h) => h.id === entryId);
+      if (!entry || entry.selectedIndex === null) return;
+      const wasCorrect = entry.selectedIndex === entry.challenge.correctIndex;
+
+      // Mark submitted + start evaluating
+      setHints((hs) =>
+        hs.map((h) =>
+          h.id === entryId
+            ? { ...h, submitted: true, wasCorrect, evaluatingReasoning: true, reasoningEval: null }
+            : h,
+        ),
+      );
+
+      try {
+        const evalResult = await evaluateReasoning({
+          problemSummary,
+          sourceSummary,
+          extraSummary,
+          attachments: buildAttachments(files),
+          hintText: entry.challenge.hint,
+          microChallenge: entry.challenge.microChallenge,
+          choices: entry.challenge.choices,
+          correctIndex: entry.challenge.correctIndex,
+          selectedIndex: entry.selectedIndex,
+          studentReasoning: entry.reasoning,
+        });
+        setHints((hs) =>
+          hs.map((h) =>
+            h.id === entryId
+              ? { ...h, evaluatingReasoning: false, reasoningEval: evalResult }
+              : h,
+          ),
+        );
+      } catch (e) {
+        console.error("evaluateReasoning failed", e);
+        setHints((hs) =>
+          hs.map((h) => (h.id === entryId ? { ...h, evaluatingReasoning: false } : h)),
+        );
+      }
+    },
+    [hints, problemSummary, sourceSummary, extraSummary, files],
+  );
 
   // ----- Continue to next hint or move to final -----
   const continueNext = useCallback(async () => {
