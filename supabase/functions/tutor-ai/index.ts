@@ -227,9 +227,10 @@ Deno.serve(async (req) => {
     if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
     const tool = toolFor(body.mode);
+    const loaded = await loadAttachments(body.attachments);
     const payload = {
       model: MODEL,
-      messages: buildMessages(body),
+      messages: buildMessages(body, loaded),
       tools: [tool],
       tool_choice: { type: "function", function: { name: tool.function.name } },
     };
