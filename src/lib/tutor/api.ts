@@ -1,5 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { MicroChallenge, FinalEvaluation, ConnectionGroup } from "./types";
+import type { MicroChallenge, FinalEvaluation, ConnectionGroup, UploadedFiles } from "./types";
+
+interface AttachmentPayload {
+  url: string;
+  mime: string;
+  label: string;
+}
 
 interface TutorPayload {
   mode: "hint" | "evaluate_final" | "connection_game";
@@ -10,6 +16,18 @@ interface TutorPayload {
   hintIndex?: number;
   previousHints?: string[];
   finalAnswer?: string;
+  attachments?: AttachmentPayload[];
+}
+
+export function buildAttachments(files: UploadedFiles): AttachmentPayload[] {
+  const out: AttachmentPayload[] = [];
+  if (files.problemPdf)
+    out.push({ url: files.problemPdf.url, mime: files.problemPdf.mime, label: "PROBLEM" });
+  if (files.sourceMaterial)
+    out.push({ url: files.sourceMaterial.url, mime: files.sourceMaterial.mime, label: "SOURCE" });
+  if (files.extraFile)
+    out.push({ url: files.extraFile.url, mime: files.extraFile.mime, label: "EXTRA" });
+  return out;
 }
 
 export async function callTutor<T>(payload: TutorPayload): Promise<T> {
