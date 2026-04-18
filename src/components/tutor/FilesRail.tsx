@@ -28,13 +28,17 @@ export function FilesRail({ session }: Props) {
   }, [isMobile]);
 
   // On mobile, when fully hidden, show a tiny floating toggle so the user can pop it in.
+  // Single tap opens the panel directly (no second tap to expand).
   if (isMobile && !mobileVisible) {
     return (
       <button
         type="button"
-        onClick={() => setMobileVisible(true)}
+        onClick={() => {
+          setMobileVisible(true);
+          setFilesOpen(true);
+        }}
         className="fixed right-0 top-1/2 z-30 flex h-12 w-4 -translate-y-1/2 items-center justify-center rounded-l-md border border-r-0 border-border bg-card/80 text-muted-foreground backdrop-blur transition-colors hover:bg-card hover:text-foreground"
-        aria-label="Show files panel"
+        aria-label="Open files panel"
       >
         <ChevronLeft className="h-3 w-3" />
       </button>
