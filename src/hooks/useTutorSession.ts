@@ -9,7 +9,7 @@ import type {
   UploadedFileMeta,
   UploadedFiles,
 } from "@/lib/tutor/types";
-import { evaluateFinal, fetchConnectionGame, requestHint } from "@/lib/tutor/api";
+import { buildAttachments, evaluateFinal, fetchConnectionGame, requestHint } from "@/lib/tutor/api";
 import { initialFriends, initialHistory, type FriendUpdate, type HistoryItem } from "@/lib/tutor/mockData";
 
 const emptyFiles: UploadedFiles = {
@@ -108,6 +108,7 @@ export function useTutorSession() {
         totalHints,
         hintIndex: 0,
         previousHints: [],
+        attachments: buildAttachments(files),
       });
       setHints([newEntry(c)]);
     } catch (e) {
@@ -158,6 +159,7 @@ export function useTutorSession() {
         totalHints,
         hintIndex: nextIndex,
         previousHints: hints.map((h) => h.challenge.hint),
+        attachments: buildAttachments(files),
       });
       setHints((hs) => [...hs, newEntry(c)]);
       setCurrentIndex(nextIndex);
@@ -181,6 +183,7 @@ export function useTutorSession() {
         totalHints: hints.length + 1,
         hintIndex: hints.length,
         previousHints: hints.map((h) => h.challenge.hint),
+        attachments: buildAttachments(files),
       });
       setHints((hs) => [...hs, newEntry(c)]);
       setCurrentIndex(hints.length);
@@ -202,6 +205,7 @@ export function useTutorSession() {
         sourceSummary,
         extraSummary,
         finalAnswer,
+        attachments: buildAttachments(files),
       });
       setFinalEval(result);
       if (result.correct) {
@@ -236,6 +240,7 @@ export function useTutorSession() {
         sourceSummary,
         extraSummary,
         previousHints: hints.map((h) => h.challenge.hint),
+        attachments: buildAttachments(files),
       });
       setConnection(result);
     } catch (e) {
