@@ -10,7 +10,8 @@ interface Props {
 }
 
 export function FinalAnswerBox({ session }: Props) {
-  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startConnectionGame, problemSummary } = session;
+  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startConnectionGame, problemSummary, fullExtractedProblemText } = session;
+  const originalProblem = fullExtractedProblemText?.trim() || problemSummary?.trim() || "";
 
   if (status === "completed" && finalEval?.correct) {
     return (
