@@ -1,0 +1,1 @@
+drop policy if exists "Public read session files" on storage.objects;
