@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import type {
   ConnectionGroup,
   FinalEvaluation,
@@ -53,12 +54,14 @@ async function persistNewHint(
     if (!user) return null;
     const { data, error } = await supabase
       .from("hint_entries")
-      .insert({
-        session_id: sessionId,
-        user_id: user.id,
-        hint_index: hintIndex,
-        challenge: challenge as unknown as Record<string, unknown>,
-      })
+      .insert([
+        {
+          session_id: sessionId,
+          user_id: user.id,
+          hint_index: hintIndex,
+          challenge: challenge as unknown as Json,
+        },
+      ])
       .select("id")
       .single();
     if (error) {
@@ -72,7 +75,15 @@ async function persistNewHint(
   }
 }
 
-async function persistHintUpdate(entryId: string, patch: Record<string, unknown>) {
+type HintUpdatePatch = Partial<{
+  selected_index: number | null;
+  reasoning: string;
+  submitted: boolean;
+  was_correct: boolean | null;
+  reasoning_eval: Json;
+}>;
+
+async function persistHintUpdate(entryId: string, patch: HintUpdatePatch) {
   try {
     await supabase.from("hint_entries").update(patch).eq("id", entryId);
   } catch (e) {
