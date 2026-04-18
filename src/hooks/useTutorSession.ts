@@ -263,6 +263,9 @@ export function useTutorSession() {
       setFinalEval(result);
       if (result.correct) {
         setStatus("completed");
+        // ===== Gamification: session-complete bonus =====
+        void game.awardSessionComplete();
+        game.bumpHeat();
         // append to history
         setHistory((h) => [
           {
@@ -281,7 +284,7 @@ export function useTutorSession() {
       setErrorMsg(e instanceof Error ? e.message : "Failed to evaluate answer");
       setStatus("awaiting_final");
     }
-  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint]);
+  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint, files, game]);
 
   // ----- Connection game -----
   const startConnectionGame = useCallback(async () => {
