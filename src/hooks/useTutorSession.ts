@@ -161,6 +161,10 @@ export function useTutorSession() {
         ),
       );
 
+      // ===== Gamification: XP + heat =====
+      void game.awardHintXp(wasCorrect);
+      game.bumpHeat();
+
       try {
         const evalResult = await evaluateReasoning({
           problemSummary,
@@ -188,7 +192,7 @@ export function useTutorSession() {
         );
       }
     },
-    [hints, problemSummary, sourceSummary, extraSummary, files],
+    [hints, problemSummary, sourceSummary, extraSummary, files, game],
   );
 
   // ----- Continue to next hint or move to final -----
