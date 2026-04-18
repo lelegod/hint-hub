@@ -529,6 +529,7 @@ export function useTutorSession() {
     setFinalAnswer("");
     setFinalEval(null);
     setConnection(null);
+    setMatch(null);
     setErrorMsg(null);
     setSessionRowId(null);
     setFullExtractedProblemText("");
@@ -571,6 +572,10 @@ export function useTutorSession() {
     // connection game
     connection,
     startConnectionGame,
+    // match mini-game
+    match,
+    startMatchGame,
+    closeMatchGame,
     // sidebar — now from real DB
     history: sessionsHook.history,
     friends: sessionsHook.friends,
