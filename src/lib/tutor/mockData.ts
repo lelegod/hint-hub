@@ -5,6 +5,7 @@ export interface HistoryItem {
   title: string;
   hintsUsed: number;
   completedAt: string;
+  status?: "active" | "completed" | "abandoned";
 }
 
 export interface FriendUpdate {
