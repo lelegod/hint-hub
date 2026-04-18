@@ -1,11 +1,28 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Clock, Flame, History as HistoryIcon, LogIn, LogOut, Plus, Sparkles, Users } from "lucide-react";
+import {
+  Bell,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Flame,
+  History as HistoryIcon,
+  LogIn,
+  LogOut,
+  Plus,
+  Sparkles,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useGamification } from "@/hooks/useGamification";
+import { useFriends } from "@/hooks/useFriends";
 import { supabase } from "@/integrations/supabase/client";
+import { AddFriendDialog } from "@/components/friends/AddFriendDialog";
 import type { FriendUpdate, HistoryItem } from "@/lib/tutor/mockData";
 
 interface Props {
@@ -14,25 +31,23 @@ interface Props {
   onNewSession: () => void;
 }
 
+type Tab = "history" | "friends" | "requests";
+
 export function AppSidebar({ history, friends, onNewSession }: Props) {
   const isMobile = useIsMobile();
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
-  // On mobile and tablet, default to collapsed (mini) so the chat gets max room.
-  const [collapsed, setCollapsed] = useState(true);
-  const [tab, setTab] = useState<"history" | "friends">("history");
+  const friendsHook = useFriends();
 
-  // Whenever viewport changes between mobile/desktop, snap to the sensible default.
+  const [collapsed, setCollapsed] = useState(true);
+  const [tab, setTab] = useState<Tab>("history");
+
   useEffect(() => {
     setCollapsed(true);
   }, [isMobile]);
 
-  // Width tiers:
-  // - mobile collapsed:  w-12 (super thin)
-  // - tablet collapsed:  w-12 (super thin)
-  // - desktop collapsed: w-14
-  // - expanded (any):    w-56 on mobile-ish, w-52 lg+ (slightly thinner than before)
-  const widthClass = collapsed ? "w-12 md:w-14" : "w-56 lg:w-52";
+  const widthClass = collapsed ? "w-12 md:w-14" : "w-60 lg:w-56";
+  const pendingCount = friendsHook.pending.length;
 
   return (
     <aside
@@ -61,7 +76,6 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
             : "flex items-center gap-2 px-3 py-3",
         )}
       >
-        {/* Mobile collapsed: brand name above logo */}
         {collapsed && isMobile && (
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Tutorly
@@ -91,7 +105,7 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
         )}
       </div>
 
-      {/* Collapsed: show a compact "+" new-session button */}
+      {/* Collapsed mini buttons */}
       {collapsed && (
         <div className="flex flex-col items-center gap-3 px-1 py-3">
           <Button
@@ -102,11 +116,26 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
           >
             <Plus className="h-4 w-4" />
           </Button>
+          {authed && pendingCount > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setCollapsed(false);
+                setTab("requests");
+              }}
+              className="relative flex h-8 w-8 items-center justify-center rounded-full border border-primary/30 bg-primary-soft text-primary"
+              aria-label={`${pendingCount} friend requests`}
+            >
+              <Bell className="h-4 w-4" />
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                {pendingCount}
+              </span>
+            </button>
+          )}
           {authed && (
             <div
               className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-accent"
               title={`${streakDays} day streak`}
-              aria-label={`${streakDays} day streak`}
             >
               <Flame className="h-4 w-4" />
             </div>
@@ -119,82 +148,44 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
           <div className="space-y-2 px-3 py-3">
             <Button onClick={onNewSession} className="w-full">New session</Button>
             {authed && (
-              <div className="flex items-center justify-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-3 py-1.5 text-sm text-accent">
-                <Flame className="h-4 w-4" />
-                <span className="text-muted-foreground">day</span>
-                <span className="font-semibold text-foreground">{streakDays}</span>
+              <div className="flex items-center justify-between gap-2">
+                <AddFriendDialog
+                  trigger={
+                    <Button size="sm" variant="outline" className="flex-1 gap-1.5">
+                      <UserPlus className="h-3.5 w-3.5" /> Add friend
+                    </Button>
+                  }
+                />
+                <div className="flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-2.5 py-1 text-sm text-accent">
+                  <Flame className="h-3.5 w-3.5" />
+                  <span className="font-semibold text-foreground">{streakDays}</span>
+                </div>
               </div>
             )}
           </div>
 
-          <div className="mx-3 grid grid-cols-2 rounded-md bg-sidebar-accent p-1 text-sm">
-            <button
-              onClick={() => setTab("history")}
-              className={cn(
-                "flex items-center justify-center gap-1.5 rounded px-2 py-1.5 transition-colors",
-                tab === "history"
-                  ? "bg-sidebar text-sidebar-foreground shadow-soft"
-                  : "text-muted-foreground hover:text-sidebar-foreground",
-              )}
-            >
-              <HistoryIcon className="h-3.5 w-3.5" /> History
-            </button>
-            <button
-              onClick={() => setTab("friends")}
-              className={cn(
-                "flex items-center justify-center gap-1.5 rounded px-2 py-1.5 transition-colors",
-                tab === "friends"
-                  ? "bg-sidebar text-sidebar-foreground shadow-soft"
-                  : "text-muted-foreground hover:text-sidebar-foreground",
-              )}
-            >
-              <Users className="h-3.5 w-3.5" /> Friends
-            </button>
+          {/* Tabs */}
+          <div className="mx-3 grid grid-cols-3 rounded-md bg-sidebar-accent p-1 text-xs">
+            <TabButton active={tab === "history"} onClick={() => setTab("history")} icon={<HistoryIcon className="h-3 w-3" />} label="History" />
+            <TabButton active={tab === "friends"} onClick={() => setTab("friends")} icon={<Users className="h-3 w-3" />} label="Friends" />
+            <TabButton
+              active={tab === "requests"}
+              onClick={() => setTab("requests")}
+              icon={<Bell className="h-3 w-3" />}
+              label="Requests"
+              badge={pendingCount > 0 ? pendingCount : undefined}
+            />
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-3">
-            {tab === "history" ? (
-              <ul className="space-y-2">
-                {history.map((h) => (
-                  <li
-                    key={h.id}
-                    className="rounded-md border border-sidebar-border bg-sidebar p-3 text-sm hover:border-primary/40"
-                  >
-                    <div className="line-clamp-2 font-medium text-sidebar-foreground">{h.title}</div>
-                    <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{h.hintsUsed} hints</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {h.completedAt}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-                {history.length === 0 && (
-                  <div className="rounded-md border border-dashed border-sidebar-border p-4 text-center text-xs text-muted-foreground">
-                    Your finished sessions will appear here.
-                  </div>
-                )}
-              </ul>
-            ) : (
-              <ul className="space-y-2">
-                {friends.map((f) => (
-                  <li key={f.id} className="rounded-md border border-sidebar-border bg-sidebar p-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
-                        {f.name[0]}
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sidebar-foreground">
-                          <span className="font-semibold">{f.name}</span>{" "}
-                          <span className="text-muted-foreground">{f.message}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">{f.timeAgo}</div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            {tab === "history" && <HistoryList history={history} />}
+            {tab === "friends" && <FriendsList friends={friendsHook.friends} feed={friends} />}
+            {tab === "requests" && (
+              <RequestsList
+                requests={friendsHook.pending}
+                onAccept={friendsHook.acceptRequest}
+                onDecline={friendsHook.declineRequest}
+              />
             )}
           </div>
 
@@ -218,5 +209,185 @@ export function AppSidebar({ history, friends, onNewSession }: Props) {
         </>
       )}
     </aside>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+  badge,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+  badge?: number;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "relative flex items-center justify-center gap-1 rounded px-1.5 py-1.5 transition-colors",
+        active
+          ? "bg-sidebar text-sidebar-foreground shadow-soft"
+          : "text-muted-foreground hover:text-sidebar-foreground",
+      )}
+    >
+      {icon} {label}
+      {badge ? (
+        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-accent-foreground">
+          {badge}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+function HistoryList({ history }: { history: HistoryItem[] }) {
+  if (history.length === 0) {
+    return (
+      <div className="rounded-md border border-dashed border-sidebar-border p-4 text-center text-xs text-muted-foreground">
+        Your finished sessions will appear here.
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-2">
+      {history.map((h) => (
+        <li
+          key={h.id}
+          className="rounded-md border border-sidebar-border bg-sidebar p-3 text-sm hover:border-primary/40"
+        >
+          <div className="line-clamp-2 font-medium text-sidebar-foreground">{h.title}</div>
+          <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+            <span>{h.hintsUsed} hints</span>
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {h.completedAt}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FriendsList({
+  friends,
+  feed,
+}: {
+  friends: { friend_user_id: string; friend_name: string }[];
+  feed: FriendUpdate[];
+}) {
+  if (friends.length === 0 && feed.length === 0) {
+    return (
+      <div className="space-y-3">
+        <div className="rounded-md border border-dashed border-sidebar-border p-4 text-center text-xs text-muted-foreground">
+          No friends yet. Tap "Add friend" to invite someone.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      {friends.length > 0 && (
+        <div>
+          <div className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Your friends
+          </div>
+          <ul className="space-y-1.5">
+            {friends.map((f) => (
+              <li key={f.friend_user_id} className="flex items-center gap-2 rounded-md border border-sidebar-border bg-sidebar p-2 text-sm">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
+                  {f.friend_name[0]?.toUpperCase() ?? "?"}
+                </div>
+                <span className="text-sidebar-foreground">{f.friend_name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {feed.length > 0 && (
+        <div>
+          <div className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Recent activity
+          </div>
+          <ul className="space-y-2">
+            {feed.map((f) => (
+              <li key={f.id} className="rounded-md border border-sidebar-border bg-sidebar p-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
+                    {f.name[0]?.toUpperCase() ?? "?"}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sidebar-foreground">
+                      <span className="font-semibold">{f.name}</span>{" "}
+                      <span className="text-muted-foreground">{f.message}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">{f.timeAgo}</div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RequestsList({
+  requests,
+  onAccept,
+  onDecline,
+}: {
+  requests: { friendship_id: string; requester_name: string; created_at: string }[];
+  onAccept: (id: string) => Promise<boolean>;
+  onDecline: (id: string) => Promise<boolean>;
+}) {
+  if (requests.length === 0) {
+    return (
+      <div className="rounded-md border border-dashed border-sidebar-border p-4 text-center text-xs text-muted-foreground">
+        No pending friend requests.
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-2">
+      {requests.map((r) => (
+        <li
+          key={r.friendship_id}
+          className="rounded-md border border-sidebar-border bg-sidebar p-3 text-sm"
+        >
+          <div className="mb-2 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
+              {r.requester_name[0]?.toUpperCase() ?? "?"}
+            </div>
+            <div className="flex-1 truncate">
+              <div className="truncate font-medium text-sidebar-foreground">{r.requester_name}</div>
+              <div className="text-xs text-muted-foreground">wants to be friends</div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="flex-1 gap-1"
+              onClick={() => onAccept(r.friendship_id)}
+            >
+              <Check className="h-3.5 w-3.5" /> Accept
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 gap-1"
+              onClick={() => onDecline(r.friendship_id)}
+            >
+              <X className="h-3.5 w-3.5" /> Decline
+            </Button>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
