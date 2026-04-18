@@ -84,19 +84,7 @@ export function StatHud() {
         </TooltipContent>
       </Tooltip>
 
-      {/* Hint tokens */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1">
-            <Coins className="h-3.5 w-3.5 text-warning" />
-            <span className="font-semibold text-foreground">
-              {state.hint_tokens}
-              <span className="text-muted-foreground">/{state.max_hint_tokens}</span>
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>Hint tokens · regenerates 1 every 30 min</TooltipContent>
-      </Tooltip>
+      {/* Hint tokens removed — hints are unlimited */}
 
       {/* Brain heat */}
       <Tooltip>
