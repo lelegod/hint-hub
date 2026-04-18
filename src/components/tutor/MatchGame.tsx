@@ -71,7 +71,7 @@ export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
     }
   }, [selectedLeft, selectedRight]);
 
-  const allMatched = matched.size === pairs.length;
+  const allMatched = safePairs.length > 0 && matched.size === safePairs.length;
 
   const tileClass = (item: Item, isSelected: boolean, isWrong: boolean) => {
     const isMatched = matched.has(item.pairIndex);
@@ -101,7 +101,7 @@ export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
         <div className="flex items-center gap-3">
           <div className="text-right text-xs text-muted-foreground">
             <div>
-              Matched <span className="font-semibold text-foreground">{matched.size}/{pairs.length}</span>
+              Matched <span className="font-semibold text-foreground">{matched.size}/{safePairs.length}</span>
             </div>
             <div>
               Mistakes <span className="font-semibold text-foreground">{mistakes}</span>
