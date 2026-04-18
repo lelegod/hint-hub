@@ -307,11 +307,23 @@ function HistoryList({ history }: { history: HistoryItem[] }) {
   );
 }
 
+function presenceColor(p: Presence) {
+  if (p === "online") return "bg-emerald-500";
+  if (p === "away") return "bg-amber-500";
+  return "bg-muted-foreground/40";
+}
+
+function presenceLabel(p: Presence) {
+  if (p === "online") return "Online";
+  if (p === "away") return "Away";
+  return "Offline";
+}
+
 function FriendsList({
   friends,
   feed,
 }: {
-  friends: { friend_user_id: string; friend_name: string }[];
+  friends: FriendRow[];
   feed: FriendUpdate[];
 }) {
   if (friends.length === 0 && feed.length === 0) {
@@ -331,14 +343,37 @@ function FriendsList({
             Your friends
           </div>
           <ul className="space-y-1.5">
-            {friends.map((f) => (
-              <li key={f.friend_user_id} className="flex items-center gap-2 rounded-md border border-sidebar-border bg-sidebar p-2 text-sm">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
-                  {f.friend_name[0]?.toUpperCase() ?? "?"}
-                </div>
-                <span className="text-sidebar-foreground">{f.friend_name}</span>
-              </li>
-            ))}
+            {friends.map((f) => {
+              const subtitle = f.current_activity
+                ? `Working on ${f.current_activity}`
+                : f.status_message || presenceLabel(f.presence);
+              return (
+                <li
+                  key={f.friend_user_id}
+                  className="flex items-start gap-2 rounded-md border border-sidebar-border bg-sidebar p-2 text-sm"
+                >
+                  <div className="relative">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
+                      {f.friend_name[0]?.toUpperCase() ?? "?"}
+                    </div>
+                    <span
+                      className={cn(
+                        "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar",
+                        presenceColor(f.presence),
+                      )}
+                      title={presenceLabel(f.presence)}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1 truncate text-sidebar-foreground">
+                      <span className="truncate font-medium">{f.friend_name}</span>
+                      {f.status_emoji && <span className="text-sm leading-none">{f.status_emoji}</span>}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
