@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import type { TutorSession } from "@/hooks/useTutorSession";
+import { RichText } from "./RichText";
 
 interface Props {
   session: TutorSession;
@@ -18,7 +19,7 @@ export function FinalAnswerBox({ session }: Props) {
           <CheckCircle2 className="mt-0.5 h-6 w-6 text-success" />
           <div className="flex-1">
             <h3 className="font-serif text-2xl text-foreground">You mastered it</h3>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/85">{finalEval.feedback}</p>
+            <div className="mt-2"><RichText className="text-sm">{finalEval.feedback}</RichText></div>
             <Button onClick={startConnectionGame} className="mt-5 gap-2" size="lg">
               Play the connection game
             </Button>
@@ -51,9 +52,9 @@ export function FinalAnswerBox({ session }: Props) {
             <XCircle className="h-4 w-4 text-accent" />
             Almost there
           </div>
-          <p className="text-sm text-foreground/90">{finalEval.feedback}</p>
+          <RichText className="text-sm">{finalEval.feedback}</RichText>
           {finalEval.whereWentWrong && (
-            <p className="mt-2 text-sm text-foreground/80">{finalEval.whereWentWrong}</p>
+            <div className="mt-2"><RichText className="text-sm">{finalEval.whereWentWrong}</RichText></div>
           )}
           <p className="mt-2 text-xs text-muted-foreground">A new hint has been added to your timeline above.</p>
         </div>

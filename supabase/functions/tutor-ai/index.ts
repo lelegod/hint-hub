@@ -167,7 +167,11 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
     (hasFiles
       ? "The student has attached files (PDFs or images). READ them carefully and ground every hint, citation, and micro-challenge in their actual content. Quote short phrases when citing. "
       : "") +
-    "Always cite uploaded source material when present. Avoid emojis.";
+    "Always cite uploaded source material when present. Avoid emojis. " +
+    "FORMATTING: Write in GitHub-flavored markdown. " +
+    "For ALL math, use LaTeX inside dollar signs: $x^2$ for inline, $$\\int_0^1 x\\,dx$$ for display. " +
+    "Never write math as plain text like x^2 or sqrt(x). " +
+    "For code, use fenced blocks with the language name, e.g. ```python or ```bash.";
 
   const ctx = [
     b.problemSummary ? `PROBLEM:\n${b.problemSummary}` : "",
