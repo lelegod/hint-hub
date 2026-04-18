@@ -28,9 +28,9 @@ const emptyFiles: UploadedFiles = {
   extraFile: null,
 };
 
-function newEntry(c: MicroChallenge): HintEntry {
+function newEntry(c: MicroChallenge, dbId?: string): HintEntry {
   return {
-    id: crypto.randomUUID(),
+    id: dbId ?? crypto.randomUUID(),
     challenge: c,
     selectedIndex: null,
     reasoning: "",
@@ -39,6 +39,45 @@ function newEntry(c: MicroChallenge): HintEntry {
     reasoningEval: null,
     evaluatingReasoning: false,
   };
+}
+
+// Persist a newly created hint entry to the DB. Returns the DB row id (or null on failure).
+async function persistNewHint(
+  sessionId: string | null,
+  hintIndex: number,
+  challenge: MicroChallenge,
+): Promise<string | null> {
+  if (!sessionId) return null;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from("hint_entries")
+      .insert({
+        session_id: sessionId,
+        user_id: user.id,
+        hint_index: hintIndex,
+        challenge: challenge as unknown as Record<string, unknown>,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      console.error("persistNewHint failed", error);
+      return null;
+    }
+    return data.id;
+  } catch (e) {
+    console.error("persistNewHint error", e);
+    return null;
+  }
+}
+
+async function persistHintUpdate(entryId: string, patch: Record<string, unknown>) {
+  try {
+    await supabase.from("hint_entries").update(patch).eq("id", entryId);
+  } catch (e) {
+    console.error("persistHintUpdate error", e);
+  }
 }
 
 export function useTutorSession() {
