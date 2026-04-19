@@ -10,11 +10,14 @@ import {
   Gamepad2,
   Grid3x3,
   Link2,
+  Lock,
   History as HistoryIcon,
   LogIn,
   LogOut,
   Plus,
+  Search,
   Sparkles,
+  Type,
   UserPlus,
   Users,
   X,
@@ -43,11 +46,22 @@ interface Props {
   onOpenSession: (id: string) => void;
   onStartMatchGame?: () => void;
   onStartConnectionGame?: () => void;
+  onStartStrandsGame?: () => void;
+  onStartWordlyGame?: () => void;
 }
 
 type Tab = "history" | "friends";
 
-export function AppSidebar({ history, friends, onNewSession, onOpenSession, onStartMatchGame, onStartConnectionGame }: Props) {
+export function AppSidebar({
+  history,
+  friends,
+  onNewSession,
+  onOpenSession,
+  onStartMatchGame,
+  onStartConnectionGame,
+  onStartStrandsGame,
+  onStartWordlyGame,
+}: Props) {
   const isMobile = useIsMobile();
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
@@ -131,7 +145,7 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
           >
             <Plus className="h-4 w-4" />
           </Button>
-          {(onStartMatchGame || onStartConnectionGame) && (
+          {(onStartMatchGame || onStartConnectionGame || onStartStrandsGame || onStartWordlyGame) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -152,6 +166,28 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
                 {onStartConnectionGame && (
                   <DropdownMenuItem onClick={onStartConnectionGame} className="gap-2">
                     <Grid3x3 className="h-4 w-4" /> Connections
+                  </DropdownMenuItem>
+                )}
+                {onStartStrandsGame && (
+                  <DropdownMenuItem
+                    onClick={onStartStrandsGame}
+                    className="gap-2"
+                    title="Find hidden words from topics you've learned"
+                  >
+                    <Search className="h-4 w-4" /> Strands
+                  </DropdownMenuItem>
+                )}
+                {onStartWordlyGame && (
+                  <DropdownMenuItem onClick={onStartWordlyGame} className="gap-2">
+                    {streakDays >= 15 ? (
+                      <Type className="h-4 w-4" />
+                    ) : (
+                      <Lock className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className="flex-1">Wordly</span>
+                    {streakDays < 15 && (
+                      <span className="text-[10px] text-muted-foreground">{streakDays}/15</span>
+                    )}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -188,7 +224,7 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
         <>
           <div className="space-y-2 px-3 py-3">
             <Button onClick={onNewSession} className="w-full">New session</Button>
-            {(onStartMatchGame || onStartConnectionGame) && (
+            {(onStartMatchGame || onStartConnectionGame || onStartStrandsGame || onStartWordlyGame) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -207,6 +243,28 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
                   {onStartConnectionGame && (
                     <DropdownMenuItem onClick={onStartConnectionGame} className="gap-2">
                       <Grid3x3 className="h-4 w-4" /> Connections
+                    </DropdownMenuItem>
+                  )}
+                  {onStartStrandsGame && (
+                    <DropdownMenuItem
+                      onClick={onStartStrandsGame}
+                      className="gap-2"
+                      title="Find hidden words from topics you've learned"
+                    >
+                      <Search className="h-4 w-4" /> Strands
+                    </DropdownMenuItem>
+                  )}
+                  {onStartWordlyGame && (
+                    <DropdownMenuItem onClick={onStartWordlyGame} className="gap-2">
+                      {streakDays >= 15 ? (
+                        <Type className="h-4 w-4" />
+                      ) : (
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="flex-1">Wordly</span>
+                      {streakDays < 15 && (
+                        <span className="text-[10px] text-muted-foreground">{streakDays}/15</span>
+                      )}
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>

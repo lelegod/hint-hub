@@ -5,7 +5,9 @@ export type SessionStatus =
   | "evaluating"
   | "completed"
   | "connection_game"
-  | "match_game";
+  | "match_game"
+  | "strands_game"
+  | "wordly_game";
 
 export interface UploadedFileMeta {
   name: string;
@@ -64,4 +66,15 @@ export interface MatchPair {
   left: string;
   right: string;
   kind: "synonym" | "definition";
+}
+
+export interface StrandsPuzzle {
+  theme: string;
+  words: string[]; // 6-10 uppercase words
+}
+
+export interface WordlyPuzzle {
+  word: string; // 4-7 letter uppercase word
+  topic: string;
+  hint: string;
 }

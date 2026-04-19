@@ -10,7 +10,7 @@ const corsHeaders = {
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
 
-type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem" | "match_game";
+type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem" | "match_game" | "strands_game" | "wordly_game";
 
 interface Attachment {
   url: string;
@@ -287,6 +287,48 @@ const CONN_TOOL = {
   },
 };
 
+const STRANDS_TOOL = {
+  type: "function",
+  function: {
+    name: "strands_game",
+    description:
+      "Generate a Strands-style puzzle: pick ONE theme from the user's learned topics and 6-10 single-word concepts from that topic. Words must be UPPERCASE letters only (A-Z), 3-9 letters each, no spaces, no punctuation, no numbers.",
+    parameters: {
+      type: "object",
+      properties: {
+        theme: { type: "string", description: "The topic name used as the puzzle theme — must be one of the learned topics provided." },
+        words: {
+          type: "array",
+          minItems: 6,
+          maxItems: 10,
+          items: { type: "string", description: "UPPERCASE single word, 3-9 letters, A-Z only." },
+        },
+      },
+      required: ["theme", "words"],
+      additionalProperties: false,
+    },
+  },
+};
+
+const WORDLY_TOOL = {
+  type: "function",
+  function: {
+    name: "wordly_game",
+    description:
+      "Generate a single Wordle-style secret word from the user's learned topics. Word must be a real concept the student studied, 4-7 letters, UPPERCASE A-Z only, no spaces, no punctuation.",
+    parameters: {
+      type: "object",
+      properties: {
+        word: { type: "string", description: "UPPERCASE secret word, 4-7 letters, A-Z only." },
+        topic: { type: "string", description: "Which learned topic the word comes from." },
+        hint: { type: "string", description: "One short clue (max 12 words) that hints at the word without spelling it." },
+      },
+      required: ["word", "topic", "hint"],
+      additionalProperties: false,
+    },
+  },
+};
+
 function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dataUrl: string }>) {
   const hasFiles = loaded.length > 0;
   const paperCount = b.paperCount ?? loaded.length;
@@ -382,6 +424,18 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       `Each pair is either (a) a term and its concise definition/description, or (b) two synonyms. ` +
       `Mix both kinds. Keep left items short (1-4 words) and right items concise (max ~12 words). ` +
       `Make pairs unambiguous so each left has exactly one correct right.`;
+  } else if (b.mode === "strands_game") {
+    userText =
+      `${ctx}\n\n` +
+      `Pick ONE theme from the user's learned topics listed above (use the topic name verbatim) and generate 6-10 single-word concepts that belong to that topic. ` +
+      `Words must be UPPERCASE A-Z only, 3-9 letters, no spaces, no hyphens, no numbers, no punctuation. ` +
+      `Words must be real concepts a learner of this topic would recognize. No random vocabulary.`;
+  } else if (b.mode === "wordly_game") {
+    userText =
+      `${ctx}\n\n` +
+      `Pick ONE secret word from the user's learned topics listed above. ` +
+      `The word must be a real concept the student studied, 4-7 letters, UPPERCASE A-Z only, no spaces or punctuation. ` +
+      `Provide a short clue (max 12 words) that hints at the meaning without spelling out the word.`;
   } else {
     const groupCount = b.groupCount ?? 4;
     userText =
@@ -412,6 +466,8 @@ function toolFor(mode: Mode) {
   if (mode === "evaluate_reasoning") return REASONING_TOOL;
   if (mode === "extract_problem") return EXTRACT_TOOL;
   if (mode === "match_game") return MATCH_TOOL;
+  if (mode === "strands_game") return STRANDS_TOOL;
+  if (mode === "wordly_game") return WORDLY_TOOL;
   return CONN_TOOL;
 }
 
