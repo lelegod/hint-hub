@@ -157,8 +157,8 @@ export function ConnectionGame({ groups, onRestart }: Props) {
 
       {!allSolved ? (
         <div className="mt-5 flex justify-end">
-          <Button onClick={submit} disabled={selected.length < 3}>
-            Submit connection
+          <Button onClick={submit} disabled={selected.length !== 4}>
+            Submit connection ({selected.length}/4)
           </Button>
         </div>
       ) : (
