@@ -17,19 +17,18 @@ const REQUIRED_STREAK = 15;
 const MAX_GUESSES = 6;
 
 type LetterState = "correct" | "present" | "absent" | "empty";
+type KeyState = "correct" | "present" | "absent";
 
 function evaluateGuess(guess: string, secret: string): LetterState[] {
   const result: LetterState[] = new Array(guess.length).fill("absent");
   const secretChars = secret.split("");
   const used: boolean[] = new Array(secret.length).fill(false);
-  // First pass — exact matches
   for (let i = 0; i < guess.length; i++) {
     if (guess[i] === secretChars[i]) {
       result[i] = "correct";
       used[i] = true;
     }
   }
-  // Second pass — present elsewhere
   for (let i = 0; i < guess.length; i++) {
     if (result[i] === "correct") continue;
     for (let j = 0; j < secretChars.length; j++) {
@@ -44,8 +43,71 @@ function evaluateGuess(guess: string, secret: string): LetterState[] {
 }
 
 export function WordlyGame({ puzzle, streakDays, hasTopics, onRestart, onPlayAgain }: Props) {
-  // Locked state — streak too low
-  if (streakDays < REQUIRED_STREAK) {
+  const secret = useMemo(() => {
+    if (!puzzle) return "";
+    return puzzle.word.toUpperCase().replace(/[^A-Z]/g, "");
+  }, [puzzle]);
+
+  const [guesses, setGuesses] = useState<string[]>([]);
+  const [current, setCurrent] = useState("");
+  const [status, setStatus] = useState<"playing" | "won" | "lost">("playing");
+  const [shake, setShake] = useState(false);
+
+  useEffect(() => {
+    setGuesses([]);
+    setCurrent("");
+    setStatus("playing");
+  }, [secret]);
+
+  const locked = streakDays < REQUIRED_STREAK;
+  const noTopics = !hasTopics;
+  const playable = !locked && !noTopics && !!secret;
+
+  useEffect(() => {
+    if (!playable || status !== "playing") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        if (current.length !== secret.length) {
+          setShake(true);
+          setTimeout(() => setShake(false), 400);
+          return;
+        }
+        const next = [...guesses, current];
+        setGuesses(next);
+        setCurrent("");
+        if (current === secret) setStatus("won");
+        else if (next.length >= MAX_GUESSES) setStatus("lost");
+      } else if (e.key === "Backspace") {
+        setCurrent((c) => c.slice(0, -1));
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        setCurrent((c) => (c.length < secret.length ? c + e.key.toUpperCase() : c));
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [playable, secret, current, status, guesses]);
+
+  const keyboardLetters = useMemo(() => {
+    const map: Record<string, KeyState> = {};
+    if (!secret) return map;
+    for (const g of guesses) {
+      const ev = evaluateGuess(g, secret);
+      for (let i = 0; i < g.length; i++) {
+        const ch = g[i];
+        const s = ev[i];
+        if (s === "empty") continue;
+        const prev = map[ch];
+        if (prev === "correct") continue;
+        if (s === "correct") map[ch] = "correct";
+        else if (s === "present" && prev !== "correct") map[ch] = "present";
+        else if (!prev) map[ch] = "absent";
+      }
+    }
+    return map;
+  }, [guesses, secret]);
+
+  // ---- Render gates (after all hooks) ----
+  if (locked) {
     return (
       <Card className="p-8 text-center shadow-soft animate-fade-in">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -63,8 +125,7 @@ export function WordlyGame({ puzzle, streakDays, hasTopics, onRestart, onPlayAga
     );
   }
 
-  // No topics
-  if (!hasTopics) {
+  if (noTopics) {
     return (
       <Card className="p-8 text-center shadow-soft animate-fade-in">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
@@ -80,48 +141,6 @@ export function WordlyGame({ puzzle, streakDays, hasTopics, onRestart, onPlayAga
       </Card>
     );
   }
-
-  return <WordlyBoard puzzle={puzzle} onRestart={onRestart} onPlayAgain={onPlayAgain} />;
-}
-
-function WordlyBoard({
-  puzzle,
-  onRestart,
-  onPlayAgain,
-}: {
-  puzzle: WordlyPuzzle | null;
-  onRestart: () => void;
-  onPlayAgain?: () => void;
-}) {
-  const secret = useMemo(() => {
-    if (!puzzle) return "";
-    return puzzle.word.toUpperCase().replace(/[^A-Z]/g, "");
-  }, [puzzle]);
-
-  const [guesses, setGuesses] = useState<string[]>([]);
-  const [current, setCurrent] = useState("");
-  const [status, setStatus] = useState<"playing" | "won" | "lost">("playing");
-  const [shake, setShake] = useState(false);
-
-  useEffect(() => {
-    setGuesses([]);
-    setCurrent("");
-    setStatus("playing");
-  }, [secret]);
-
-  useEffect(() => {
-    if (!secret || status !== "playing") return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Enter") submit();
-      else if (e.key === "Backspace") setCurrent((c) => c.slice(0, -1));
-      else if (/^[a-zA-Z]$/.test(e.key)) {
-        setCurrent((c) => (c.length < secret.length ? c + e.key.toUpperCase() : c));
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secret, current, status, guesses]);
 
   if (!puzzle || !secret) {
     return (
@@ -143,23 +162,6 @@ function WordlyBoard({
     if (current === secret) setStatus("won");
     else if (next.length >= MAX_GUESSES) setStatus("lost");
   };
-
-  const keyboardLetters = useMemo(() => {
-    const map: Record<string, LetterState> = {};
-    for (const g of guesses) {
-      const ev = evaluateGuess(g, secret);
-      for (let i = 0; i < g.length; i++) {
-        const ch = g[i];
-        const s = ev[i];
-        const prev = map[ch];
-        if (prev === "correct") continue;
-        if (s === "correct" || (s === "present" && prev !== "correct") || !prev) {
-          map[ch] = s;
-        }
-      }
-    }
-    return map;
-  }, [guesses, secret]);
 
   const rows = [
     "QWERTYUIOP".split(""),
