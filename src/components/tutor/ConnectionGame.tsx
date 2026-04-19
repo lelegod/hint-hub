@@ -24,12 +24,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const PALETTE = [
-  "bg-primary-soft text-primary border-primary/40",
-  "bg-accent-soft text-accent border-accent/40",
-  "bg-success-soft text-success border-success/40",
-  "bg-secondary text-secondary-foreground border-border",
-];
+const SOLVED_STYLE = "bg-success-soft text-success border-success/50";
 
 export function ConnectionGame({ groups, onRestart }: Props) {
   const tiles = useMemo<Tile[]>(
