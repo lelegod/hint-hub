@@ -145,7 +145,7 @@ export function AppSidebar({
           >
             <Plus className="h-4 w-4" />
           </Button>
-          {(onStartMatchGame || onStartConnectionGame) && (
+          {(onStartMatchGame || onStartConnectionGame || onStartStrandsGame || onStartWordlyGame) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -166,6 +166,28 @@ export function AppSidebar({
                 {onStartConnectionGame && (
                   <DropdownMenuItem onClick={onStartConnectionGame} className="gap-2">
                     <Grid3x3 className="h-4 w-4" /> Connections
+                  </DropdownMenuItem>
+                )}
+                {onStartStrandsGame && (
+                  <DropdownMenuItem
+                    onClick={onStartStrandsGame}
+                    className="gap-2"
+                    title="Find hidden words from topics you've learned"
+                  >
+                    <Search className="h-4 w-4" /> Strands
+                  </DropdownMenuItem>
+                )}
+                {onStartWordlyGame && (
+                  <DropdownMenuItem onClick={onStartWordlyGame} className="gap-2">
+                    {streakDays >= 15 ? (
+                      <Type className="h-4 w-4" />
+                    ) : (
+                      <Lock className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className="flex-1">Wordly</span>
+                    {streakDays < 15 && (
+                      <span className="text-[10px] text-muted-foreground">{streakDays}/15</span>
+                    )}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
