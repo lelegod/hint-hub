@@ -104,9 +104,9 @@ export function ChatThread({ session }: Props) {
           {isSetup ? (
             <div className="animate-fade-in">
               <h1 className="text-center font-serif text-4xl leading-tight text-foreground sm:text-5xl">
-                Hey!
+                Welcome
                 <br />
-                <span className="text-muted-foreground">What should we learn for today?</span>
+                <span className="text-muted-foreground">How can I support your learning today?</span>
               </h1>
             </div>
           ) : (
