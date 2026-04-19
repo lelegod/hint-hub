@@ -283,8 +283,12 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       : "") +
     "Always cite uploaded source material when present. Avoid emojis. " +
     "FORMATTING: Write in GitHub-flavored markdown. " +
-    "For ALL math, use LaTeX inside dollar signs: $x^2$ for inline, $$\\int_0^1 x\\,dx$$ for display. " +
-    "Never write math as plain text like x^2 or sqrt(x). " +
+    "MATH RULES (strict): " +
+    "Write SIMPLE expressions as plain text — NO dollar signs, NO LaTeX. " +
+    "Simple means: basic arithmetic, single-variable equations, simple fractions like 3/4, linear forms, function notation. " +
+    "Examples that MUST be plain text: x + 2 = 5, 3/4, a(b + c), 2x - 7, y = mx + b, f(x) = x + 1. " +
+    "ONLY use LaTeX inside $...$ (inline) or $$...$$ (display) for genuinely complex math: exponents like x^2, roots, integrals, summations, matrices, fractions with complex numerators/denominators, Greek letters, or anything that does not render cleanly as plain text. " +
+    "Never write complex math as ascii like x^2 or sqrt(x) — use $x^2$ or $\\sqrt{x}$. " +
     "For code, use fenced blocks with the language name, e.g. ```python or ```bash.";
 
   const ctx = [
