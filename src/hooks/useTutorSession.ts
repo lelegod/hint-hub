@@ -467,23 +467,55 @@ export function useTutorSession() {
   }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint, files, game, sessionRowId]);
 
   // ----- Connection game -----
+  // Pulls ONLY from topics the user has actually practiced (skill_nodes).
   const startConnectionGame = useCallback(async () => {
     setErrorMsg(null);
+    setPreviousStatus(status);
     setStatus("connection_game");
+    setConnection(null);
+
+    const learnedTopics = (game.skillNodes ?? [])
+      .slice()
+      .sort((a, b) => b.times_practiced - a.times_practiced)
+      .map((n) => n.topic)
+      .filter(Boolean);
+
+    // Need at least 2 learned topics to make a meaningful puzzle (we'll adjust group count)
+    if (learnedTopics.length < 2) {
+      setConnection({ groups: [] });
+      return;
+    }
+
+    // Use up to 4 topics as categories
+    const categoryTopics = learnedTopics.slice(0, 4);
+    const groupCount = categoryTopics.length;
+    const topicsContext =
+      `The user has previously studied these topics in their account:\n` +
+      categoryTopics.map((t, i) => `${i + 1}. ${t}`).join("\n") +
+      `\n\nGenerate EXACTLY ${groupCount} categories — one for each topic above, using that topic name as the theme. ` +
+      `For each category, generate 4 recognizable concepts, subtopics, or example terms that belong to that topic. ` +
+      `Do NOT invent unrelated subjects. Items must be things a learner of these topics would recognize.`;
+
     try {
       const result = await fetchConnectionGame({
-        problemSummary,
-        sourceSummary,
-        extraSummary,
-        previousHints: hints.map((h) => h.challenge.hint),
-        attachments: buildAttachments(files),
+        problemSummary: topicsContext,
+        sourceSummary: "",
+        extraSummary: "",
+        previousHints: [],
+        attachments: [],
+        groupCount,
       });
       setConnection(result);
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to load connection game");
-      setStatus("completed");
+      setStatus(previousStatus);
     }
-  }, [problemSummary, sourceSummary, extraSummary, hints, files]);
+  }, [status, previousStatus, game.skillNodes]);
+
+  const closeConnectionGame = useCallback(() => {
+    setConnection(null);
+    setStatus(previousStatus === "connection_game" ? "setup" : previousStatus);
+  }, [previousStatus]);
 
   // ----- Match mini-game (sidebar tab) -----
   // Pulls ONLY from topics the user has actually practiced (skill_nodes).
