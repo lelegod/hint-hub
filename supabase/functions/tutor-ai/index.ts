@@ -39,6 +39,10 @@ interface Body {
   selectedIndex?: number;
   // For connection_game
   groupCount?: number;
+  // Number of source/paper attachments uploaded by the user (for wording)
+  paperCount?: number;
+  // 0-100 prior mastery on this topic (used to ease evaluation when familiar)
+  priorMastery?: number;
 }
 
 // Fetch each attachment and convert to a data URL the AI gateway can consume.
