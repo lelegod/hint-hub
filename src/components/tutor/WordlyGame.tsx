@@ -101,7 +101,7 @@ export function WordlyGame({ puzzle, streakDays, hasTopics, onRestart, onPlayAga
         if (s === "correct") {
           map[ch] = "correct";
         } else if (s === "present") {
-          if (prev !== "correct") map[ch] = "present";
+          map[ch] = "present";
         } else if (!prev) {
           map[ch] = "absent";
         }
