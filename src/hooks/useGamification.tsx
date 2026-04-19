@@ -65,8 +65,8 @@ interface GamificationContextValue {
   bumpHeat: () => void;
   /** Touch streak — call on first action of the day */
   touchStreak: () => Promise<void>;
-  /** Upsert a skill node by topic name */
-  practiceTopic: (topic: string, parent?: string | null) => Promise<void>;
+  /** Upsert a skill node by topic name. quality: "strong" gives a bigger mastery bump. */
+  practiceTopic: (topic: string, parent?: string | null, quality?: "strong" | "partial") => Promise<void>;
 }
 
 const GamificationContext = createContext<GamificationContextValue | null>(null);
@@ -264,25 +264,27 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   }, [state, updateGamification, pushReward]);
 
   const practiceTopic = useCallback(
-    async (topic: string, parent: string | null = null) => {
+    async (topic: string, parent: string | null = null, quality: "strong" | "partial" = "partial") => {
       if (!userId) return;
       const cleanTopic = topic.trim().slice(0, 80);
       if (!cleanTopic) return;
+      const bump = quality === "strong" ? 18 : 6;
       const existing = skillNodes.find((n) => n.topic.toLowerCase() === cleanTopic.toLowerCase());
       if (existing) {
-        const newMastery = Math.min(100, existing.mastery + 8);
+        const newMastery = Math.min(100, existing.mastery + bump);
         const updated = { ...existing, mastery: newMastery, times_practiced: existing.times_practiced + 1 };
         setSkillNodes((ns) => ns.map((n) => (n.id === existing.id ? updated : n)));
         await supabase.from("skill_nodes").update({ mastery: newMastery, times_practiced: updated.times_practiced }).eq("id", existing.id);
       } else {
-        const insertRow = { user_id: userId, topic: cleanTopic, parent_topic: parent, mastery: 5, times_practiced: 1 };
+        const startMastery = quality === "strong" ? 25 : 5;
+        const insertRow = { user_id: userId, topic: cleanTopic, parent_topic: parent, mastery: startMastery, times_practiced: 1 };
         const { data } = await supabase.from("skill_nodes").insert(insertRow).select().single();
         if (data) {
           setSkillNodes((ns) => [...ns, data as SkillNode]);
           sfxUnlock();
           pushReward({
             kind: "skill_unlock",
-            title: "New skill unlocked",
+            title: quality === "strong" ? "Strong skill unlocked" : "Partial skill unlocked",
             subtitle: cleanTopic,
             emoji: "🌱",
           });
