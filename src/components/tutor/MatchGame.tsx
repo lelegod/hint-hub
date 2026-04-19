@@ -52,25 +52,6 @@ export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
   const [wrong, setWrong] = useState<{ left?: string; right?: string } | null>(null);
   const [mistakes, setMistakes] = useState(0);
 
-  // Empty state — user has no learned topics yet (placed AFTER hooks to keep hook order stable)
-  if (safePairs.length === 0) {
-    return (
-      <Card className="p-8 text-center shadow-soft animate-fade-in">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
-          <Sparkles className="h-6 w-6" />
-        </div>
-        <h3 className="font-serif text-2xl text-foreground">No topics yet</h3>
-        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          Play a few problems first to unlock your personalized mini-game! Each topic you
-          practice grows your skill tree and feeds the matching game.
-        </p>
-        <div className="mt-5 flex justify-center">
-          <Button onClick={onRestart}>Back to session</Button>
-        </div>
-      </Card>
-    );
-  }
-
   // Resolve a pick when both sides are selected
   useEffect(() => {
     if (!selectedLeft || !selectedRight) return;
@@ -91,7 +72,26 @@ export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
     }
   }, [selectedLeft, selectedRight]);
 
-  const allMatched = safePairs.length > 0 && matched.size === safePairs.length;
+  // Empty state — user has no learned topics yet (placed AFTER all hooks to keep hook order stable)
+  if (safePairs.length === 0) {
+    return (
+      <Card className="p-8 text-center shadow-soft animate-fade-in">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+          <Sparkles className="h-6 w-6" />
+        </div>
+        <h3 className="font-serif text-2xl text-foreground">No topics yet</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          Play a few problems first to unlock your personalized mini-game! Each topic you
+          practice grows your skill tree and feeds the matching game.
+        </p>
+        <div className="mt-5 flex justify-center">
+          <Button onClick={onRestart}>Back to session</Button>
+        </div>
+      </Card>
+    );
+  }
+
+  const allMatched = matched.size === safePairs.length;
 
   const tileClass = (item: Item, isSelected: boolean, isWrong: boolean) => {
     const isMatched = matched.has(item.pairIndex);
