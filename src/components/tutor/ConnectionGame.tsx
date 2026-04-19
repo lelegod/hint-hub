@@ -105,7 +105,7 @@ export function ConnectionGame({ groups, onRestart }: Props) {
           </div>
           <h3 className="mt-1 font-serif text-2xl text-foreground">Group the related ideas</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Select 3 or 4 terms that connect, then submit. Find all 4 to lock in a group.
+            Select 4 terms that connect, then submit.
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onRestart} className="gap-2">
