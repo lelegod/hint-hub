@@ -72,23 +72,18 @@ export function ConnectionGame({ groups, onRestart }: Props) {
   };
 
   const submit = () => {
-    if (selected.length < 3) return;
+    if (selected.length !== 4) return;
     const picks = selected.map((i) => board[i]);
     const sameGroup = picks.every((t) => t.groupIndex === picks[0].groupIndex);
     if (sameGroup) {
       const g = groups[picks[0].groupIndex];
-      // Only count as solved if all 4 of that group selected
-      if (selected.length === 4) {
-        setSolved((s) => [...s, g]);
-        setBoard((b) => b.filter((_, i) => !selected.includes(i)));
-        setMessage(g.explanation);
-      } else {
-        setMessage(`Good direction. Find all 4 terms in the "${g.theme}" group.`);
-      }
+      setSolved((s) => [...s, g]);
+      setBoard((b) => b.filter((_, i) => !selected.includes(i)));
+      setMessage(g.explanation);
       setSelected([]);
     } else {
       setShake(true);
-      setMessage("Those terms do not all belong to the same idea. Try again.");
+      setMessage("Those 4 terms do not all belong to the same idea. Try again.");
       setTimeout(() => setShake(false), 500);
     }
   };
@@ -105,7 +100,7 @@ export function ConnectionGame({ groups, onRestart }: Props) {
           </div>
           <h3 className="mt-1 font-serif text-2xl text-foreground">Group the related ideas</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Select 3 or 4 terms that connect, then submit. Find all 4 to lock in a group.
+            Select 4 terms that connect, then submit.
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onRestart} className="gap-2">
@@ -162,8 +157,8 @@ export function ConnectionGame({ groups, onRestart }: Props) {
 
       {!allSolved ? (
         <div className="mt-5 flex justify-end">
-          <Button onClick={submit} disabled={selected.length < 3}>
-            Submit connection
+          <Button onClick={submit} disabled={selected.length !== 4}>
+            Submit connection ({selected.length}/4)
           </Button>
         </div>
       ) : (

@@ -15,7 +15,7 @@ const FINAL_MCQ_OPTIONS = ["Paper 1", "Paper 2", "Paper 3", "Paper 4"];
 const FINAL_MCQ_CORRECT = 3; // Paper 4 (index 3)
 
 export function FinalAnswerBox({ session }: Props) {
-  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startConnectionGame, problemSummary, fullExtractedProblemText } = session;
+  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startMatchGame, problemSummary, fullExtractedProblemText } = session;
   const originalProblem = fullExtractedProblemText?.trim() || problemSummary?.trim() || "";
 
   const [mcqChoice, setMcqChoice] = useState<number | null>(null);
@@ -30,8 +30,9 @@ export function FinalAnswerBox({ session }: Props) {
           <div className="flex-1">
             <h3 className="font-serif text-2xl text-foreground">You mastered it</h3>
             <div className="mt-2"><RichText className="text-sm">{finalEval.feedback}</RichText></div>
-            <Button onClick={startConnectionGame} className="mt-5 gap-2" size="lg">
-              Play the connection game
+            <p className="mt-2 text-sm text-foreground/80">Lock it in with a quick matching game on what you just learned.</p>
+            <Button onClick={startMatchGame} className="mt-5 gap-2" size="lg">
+              Play the matching game
             </Button>
           </div>
         </div>
