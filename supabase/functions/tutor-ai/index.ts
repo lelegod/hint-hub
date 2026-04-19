@@ -232,25 +232,33 @@ const CONN_TOOL = {
   type: "function",
   function: {
     name: "connection_game",
-    description: "Generate a 4x4 connection grid of related concepts from the session",
+    description:
+      "Generate a Connections-style grid. Each group is a category (a topic the user has learned) with 4 items belonging to that topic.",
     parameters: {
       type: "object",
       properties: {
         groups: {
           type: "array",
-          minItems: 4,
+          minItems: 2,
           maxItems: 4,
           items: {
             type: "object",
             properties: {
-              theme: { type: "string" },
+              theme: {
+                type: "string",
+                description: "The category name — must be one of the learned topics provided",
+              },
               terms: {
                 type: "array",
                 items: { type: "string" },
                 minItems: 4,
                 maxItems: 4,
+                description: "4 recognizable concepts/subtopics/examples from this topic",
               },
-              explanation: { type: "string" },
+              explanation: {
+                type: "string",
+                description: "Short explanation of what ties these 4 items together",
+              },
             },
             required: ["theme", "terms", "explanation"],
             additionalProperties: false,

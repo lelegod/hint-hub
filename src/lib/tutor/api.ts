@@ -31,6 +31,8 @@ interface TutorPayload {
   correctIndex?: number;
   selectedIndex?: number;
   studentReasoning?: string;
+  // connection_game
+  groupCount?: number;
 }
 
 export function buildAttachments(files: UploadedFiles): AttachmentPayload[] {

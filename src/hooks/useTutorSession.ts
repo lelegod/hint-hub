@@ -752,6 +752,7 @@ export function useTutorSession() {
     // connection game
     connection,
     startConnectionGame,
+    closeConnectionGame,
     // match mini-game
     match,
     startMatchGame,
