@@ -73,7 +73,7 @@ export function HintActionBox({
         {c.sourceReference && (
           <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
             <BookMarked className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-            <span>{c.sourceReference}</span>
+            <RichText className="text-xs [&_p]:m-0 [&_p]:text-muted-foreground">{c.sourceReference}</RichText>
           </div>
         )}
 
