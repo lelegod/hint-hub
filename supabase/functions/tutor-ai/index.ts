@@ -342,10 +342,14 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       `Mix both kinds. Keep left items short (1-4 words) and right items concise (max ~12 words). ` +
       `Make pairs unambiguous so each left has exactly one correct right.`;
   } else {
+    const groupCount = b.groupCount ?? 4;
     userText =
-      `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
-      `Generate 4 themed groups of 4 related terms each, drawn from the concepts in this session. ` +
-      `Mix the terms when shown to the student.`;
+      `${ctx}\n\n` +
+      `Generate EXACTLY ${groupCount} themed groups, each with 4 related items. ` +
+      `Each group's theme MUST be one of the learned topics provided above (use the topic name verbatim as the theme). ` +
+      `For each group, the 4 terms must be recognizable concepts, subtopics, or example problems from that topic — things a learner of that topic would have seen. ` +
+      `Do NOT invent unrelated subjects. Do NOT mix items across topics. ` +
+      `Keep each term short (1-3 words). Make item-to-category assignment unambiguous.`;
   }
 
   // Build multimodal user content: text + each file as image_url (data URL).
