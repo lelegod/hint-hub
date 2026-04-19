@@ -10,11 +10,14 @@ import {
   Gamepad2,
   Grid3x3,
   Link2,
+  Lock,
   History as HistoryIcon,
   LogIn,
   LogOut,
   Plus,
+  Search,
   Sparkles,
+  Type,
   UserPlus,
   Users,
   X,
@@ -43,11 +46,22 @@ interface Props {
   onOpenSession: (id: string) => void;
   onStartMatchGame?: () => void;
   onStartConnectionGame?: () => void;
+  onStartStrandsGame?: () => void;
+  onStartWordlyGame?: () => void;
 }
 
 type Tab = "history" | "friends";
 
-export function AppSidebar({ history, friends, onNewSession, onOpenSession, onStartMatchGame, onStartConnectionGame }: Props) {
+export function AppSidebar({
+  history,
+  friends,
+  onNewSession,
+  onOpenSession,
+  onStartMatchGame,
+  onStartConnectionGame,
+  onStartStrandsGame,
+  onStartWordlyGame,
+}: Props) {
   const isMobile = useIsMobile();
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
