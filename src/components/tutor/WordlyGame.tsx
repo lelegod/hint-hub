@@ -96,11 +96,15 @@ export function WordlyGame({ puzzle, streakDays, hasTopics, onRestart, onPlayAga
         const ch = g[i];
         const s = ev[i];
         if (s === "empty") continue;
-        const prev = map[ch];
+        const prev: KeyState | undefined = map[ch];
         if (prev === "correct") continue;
-        if (s === "correct") map[ch] = "correct";
-        else if (s === "present" && prev !== "correct") map[ch] = "present";
-        else if (!prev) map[ch] = "absent";
+        if (s === "correct") {
+          map[ch] = "correct";
+        } else if (s === "present") {
+          if (prev !== "correct") map[ch] = "present";
+        } else if (!prev) {
+          map[ch] = "absent";
+        }
       }
     }
     return map;
