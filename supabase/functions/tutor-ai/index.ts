@@ -289,6 +289,10 @@ const CONN_TOOL = {
 
 function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dataUrl: string }>) {
   const hasFiles = loaded.length > 0;
+  const paperCount = b.paperCount ?? loaded.length;
+  const sourceTermSingular = paperCount <= 1 ? "section" : "paper";
+  const sourceTermPlural = paperCount <= 1 ? "sections" : "papers";
+
   const system =
     "You are a Socratic tutor. Never reveal the final answer to the original problem. " +
     "Break problems into conceptual steps. Generate clear, age-appropriate hints. " +
@@ -303,14 +307,23 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
     "Examples that MUST be plain text: x + 2 = 5, 3/4, a(b + c), 2x - 7, y = mx + b, f(x) = x + 1. " +
     "ONLY use LaTeX inside $...$ (inline) or $$...$$ (display) for genuinely complex math: exponents like x^2, roots, integrals, summations, matrices, fractions with complex numerators/denominators, Greek letters, or anything that does not render cleanly as plain text. " +
     "Never write complex math as ascii like x^2 or sqrt(x) — use $x^2$ or $\\sqrt{x}$. " +
-    "For code, use fenced blocks with the language name, e.g. ```python or ```bash.";
+    "For code, use fenced blocks with the language name, e.g. ```python or ```bash. " +
+    `SOURCE WORDING (strict): The student uploaded ${paperCount} paper(s)/source file(s). ` +
+    (paperCount <= 1
+      ? `NEVER ask which "paper" something is from — there is at most one. Use "${sourceTermSingular}", "part", "passage", "page", or another precise word that fits the single source. `
+      : `When asking which source something belongs to, you may say "paper". `) +
+    "QUESTION-ANSWER ALIGNMENT (strict): The four MCQ choices MUST match the GRAMMATICAL TYPE the question asks for. " +
+    "If the question asks 'how many / how much / what value / what number / what amount' — all 4 choices must be NUMBERS or numeric expressions, NOT explanations. " +
+    "If the question asks 'what is the purpose / role / meaning of X' — all 4 choices must be short purpose/role descriptions. " +
+    "If it asks 'which step comes next' — choices are steps. If it asks 'which formula' — choices are formulas. " +
+    "Never mix categories (e.g. one number plus three explanations). If you cannot make 4 same-type choices, REPHRASE the question so you can.";
 
   const ctx = [
     b.problemSummary ? `PROBLEM:\n${b.problemSummary}` : "",
     b.sourceSummary ? `SOURCE MATERIAL NOTES:\n${b.sourceSummary}` : "",
     b.extraSummary ? `EXTRA CONTEXT:\n${b.extraSummary}` : "",
     hasFiles
-      ? `ATTACHED FILES (read them):\n${loaded.map((f) => `- ${f.label} (${f.mime})`).join("\n")}`
+      ? `ATTACHED FILES (${paperCount} ${sourceTermPlural}, read them):\n${loaded.map((f) => `- ${f.label} (${f.mime})`).join("\n")}`
       : "",
   ]
     .filter(Boolean)
@@ -323,10 +336,20 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       `${ctx}\n\n` +
       `Total hints planned: ${b.totalHints ?? 5}. Current hint index (0-based): ${b.hintIndex ?? 0}.\n` +
       `Previous hints already given:\n${prev || "(none)"}\n\n` +
-      `Generate the next hint plus a multiple-choice micro-challenge. Do not repeat earlier hints.` +
+      `Generate the next hint plus a multiple-choice micro-challenge. Do not repeat earlier hints. ` +
+      `Remember: the 4 choices must all match the type the question asks for (numbers for "how many", purposes for "what is the role of", etc.).` +
       (hasFiles ? " Reference the attached files explicitly when relevant." : "");
   } else if (b.mode === "evaluate_final") {
-    userText = `${ctx}\n\nSTUDENT FINAL ANSWER:\n${b.finalAnswer ?? ""}\n\nEvaluate it.` +
+    const mastery = b.priorMastery ?? 0;
+    const leniency =
+      mastery >= 60
+        ? `The student has prior mastery on this topic (~${mastery}%). Be LENIENT: if their answer captures the main idea and core reasoning, accept it as correct=true even with small gaps or imprecision. Then set masteryQuality="partial" unless the answer is fully accurate (then "strong").`
+        : mastery >= 30
+          ? `The student has some prior practice (~${mastery}%). Use moderate strictness. masteryQuality="strong" only when the answer is fully accurate; otherwise "partial" if mostly right.`
+          : `The student is new to this topic (mastery ~${mastery}%). Be appropriately strict — require a substantively correct answer for correct=true, masteryQuality="strong" when the explanation is solid.`;
+    userText =
+      `${ctx}\n\nSTUDENT FINAL ANSWER:\n${b.finalAnswer ?? ""}\n\n` +
+      `${leniency}\n\nEvaluate it.` +
       (hasFiles ? " Use the attached files as ground truth." : "");
   } else if (b.mode === "evaluate_reasoning") {
     const choicesList = (b.choices ?? []).map((c, i) => `${String.fromCharCode(65 + i)}. ${c}`).join("\n");
