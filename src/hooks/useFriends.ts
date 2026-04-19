@@ -19,6 +19,8 @@ export interface FriendRow {
   status_message: string | null;
   current_activity: string | null;
   presence: Presence;
+  level: number;
+  streak_days: number;
 }
 
 export interface MyStatus {

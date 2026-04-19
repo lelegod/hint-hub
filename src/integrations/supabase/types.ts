@@ -385,10 +385,12 @@ export type Database = {
           friend_name: string
           friend_user_id: string
           last_seen_at: string
+          level: number
           presence: string
           since: string
           status_emoji: string
           status_message: string
+          streak_days: number
         }[]
       }
       list_pending_friend_requests: {
