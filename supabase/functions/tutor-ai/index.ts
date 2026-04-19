@@ -10,7 +10,7 @@ const corsHeaders = {
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
 
-type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem" | "match_game";
+type Mode = "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem" | "match_game" | "strands_game" | "wordly_game";
 
 interface Attachment {
   url: string;
@@ -287,7 +287,47 @@ const CONN_TOOL = {
   },
 };
 
-function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dataUrl: string }>) {
+const STRANDS_TOOL = {
+  type: "function",
+  function: {
+    name: "strands_game",
+    description:
+      "Generate a Strands-style puzzle: pick ONE theme from the user's learned topics and 6-10 single-word concepts from that topic. Words must be UPPERCASE letters only (A-Z), 3-9 letters each, no spaces, no punctuation, no numbers.",
+    parameters: {
+      type: "object",
+      properties: {
+        theme: { type: "string", description: "The topic name used as the puzzle theme — must be one of the learned topics provided." },
+        words: {
+          type: "array",
+          minItems: 6,
+          maxItems: 10,
+          items: { type: "string", description: "UPPERCASE single word, 3-9 letters, A-Z only." },
+        },
+      },
+      required: ["theme", "words"],
+      additionalProperties: false,
+    },
+  },
+};
+
+const WORDLY_TOOL = {
+  type: "function",
+  function: {
+    name: "wordly_game",
+    description:
+      "Generate a single Wordle-style secret word from the user's learned topics. Word must be a real concept the student studied, 4-7 letters, UPPERCASE A-Z only, no spaces, no punctuation.",
+    parameters: {
+      type: "object",
+      properties: {
+        word: { type: "string", description: "UPPERCASE secret word, 4-7 letters, A-Z only." },
+        topic: { type: "string", description: "Which learned topic the word comes from." },
+        hint: { type: "string", description: "One short clue (max 12 words) that hints at the word without spelling it." },
+      },
+      required: ["word", "topic", "hint"],
+      additionalProperties: false,
+    },
+  },
+};
   const hasFiles = loaded.length > 0;
   const paperCount = b.paperCount ?? loaded.length;
   const sourceTermSingular = paperCount <= 1 ? "section" : "paper";
