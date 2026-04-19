@@ -387,6 +387,7 @@ export function useTutorSession() {
         hintIndex: nextIndex,
         previousHints: hints.map((h) => h.challenge.hint),
         attachments: buildAttachments(files),
+        paperCount: computePaperCount(files),
       });
       const dbHintId = await persistNewHint(sessionRowId, nextIndex, c);
       setHints((hs) => [...hs, newEntry(c, dbHintId ?? undefined)]);
@@ -402,7 +403,7 @@ export function useTutorSession() {
     } finally {
       setLoadingHint(false);
     }
-  }, [currentIndex, totalHints, problemSummary, sourceSummary, extraSummary, hints, files, sessionRowId]);
+  }, [currentIndex, totalHints, problemSummary, sourceSummary, extraSummary, hints, files, sessionRowId, computePaperCount]);
 
   // ----- Extra hint (when stuck on final) -----
   const requestExtraHint = useCallback(async () => {
@@ -418,6 +419,7 @@ export function useTutorSession() {
         hintIndex: hints.length,
         previousHints: hints.map((h) => h.challenge.hint),
         attachments: buildAttachments(files),
+        paperCount: computePaperCount(files),
       });
       const dbHintId = await persistNewHint(sessionRowId, hints.length, c);
       setHints((hs) => [...hs, newEntry(c, dbHintId ?? undefined)]);
@@ -433,13 +435,15 @@ export function useTutorSession() {
     } finally {
       setLoadingHint(false);
     }
-  }, [hints, problemSummary, sourceSummary, extraSummary, files, sessionRowId]);
+  }, [hints, problemSummary, sourceSummary, extraSummary, files, sessionRowId, computePaperCount]);
 
   // ----- Final submission -----
   const submitFinal = useCallback(async () => {
     if (!finalAnswer.trim()) return;
     setErrorMsg(null);
     setStatus("evaluating");
+    const topicLabel = problemSummary.slice(0, 40);
+    const priorMastery = getPriorMastery(topicLabel);
     try {
       const result = await evaluateFinal({
         problemSummary,
@@ -447,11 +451,15 @@ export function useTutorSession() {
         extraSummary,
         finalAnswer,
         attachments: buildAttachments(files),
+        paperCount: computePaperCount(files),
+        priorMastery,
       });
       setFinalEval(result);
       if (result.correct) {
         setStatus("completed");
         void game.awardSessionComplete();
+        const quality: "strong" | "partial" = result.masteryQuality === "strong" ? "strong" : "partial";
+        void game.practiceTopic(topicLabel, null, quality);
         game.bumpHeat();
 
         if (sessionRowId) {
@@ -467,7 +475,6 @@ export function useTutorSession() {
             })
             .eq("id", sessionRowId);
         }
-        // Clear current activity on completion
         void supabase.rpc("set_my_activity", { _activity: "" });
       } else {
         if (sessionRowId) {
@@ -486,7 +493,7 @@ export function useTutorSession() {
       setErrorMsg(e instanceof Error ? e.message : "Failed to evaluate answer");
       setStatus("awaiting_final");
     }
-  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint, files, game, sessionRowId]);
+  }, [finalAnswer, problemSummary, sourceSummary, extraSummary, hints.length, requestExtraHint, files, game, sessionRowId, computePaperCount, getPriorMastery]);
 
   // ----- Connection game -----
   // Pulls ONLY from topics the user has actually practiced (skill_nodes).
