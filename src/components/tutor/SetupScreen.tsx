@@ -32,7 +32,7 @@ export function SetupScreen({ session }: Props) {
           <h1 className="text-center font-serif text-4xl leading-tight text-foreground sm:text-5xl">
             Welcome!
             <br />
-            <span className="text-muted-foreground"> How can I support your learning today?</span>
+            <span className="text-muted-foreground">How can I support your learning today?</span>
           </h1>
 
           <form onSubmit={handleSubmit} className="mt-12">
