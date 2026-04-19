@@ -18,6 +18,7 @@ const Index = () => {
         onNewSession={session.resetSession}
         onOpenSession={session.loadSession}
         onStartMatchGame={session.startMatchGame}
+        onStartConnectionGame={session.startConnectionGame}
       />
 
       <main className="flex h-full flex-1 overflow-hidden">

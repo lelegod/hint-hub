@@ -8,6 +8,7 @@ import {
   Clock,
   Flame,
   Gamepad2,
+  Grid3x3,
   History as HistoryIcon,
   LogIn,
   LogOut,
@@ -34,11 +35,12 @@ interface Props {
   onNewSession: () => void;
   onOpenSession: (id: string) => void;
   onStartMatchGame?: () => void;
+  onStartConnectionGame?: () => void;
 }
 
 type Tab = "history" | "friends";
 
-export function AppSidebar({ history, friends, onNewSession, onOpenSession, onStartMatchGame }: Props) {
+export function AppSidebar({ history, friends, onNewSession, onOpenSession, onStartMatchGame, onStartConnectionGame }: Props) {
   const isMobile = useIsMobile();
   const { authed, state } = useGamification();
   const streakDays = state?.streak_days ?? 0;
@@ -133,6 +135,17 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
               <Gamepad2 className="h-4 w-4" />
             </button>
           )}
+          {onStartConnectionGame && (
+            <button
+              type="button"
+              onClick={onStartConnectionGame}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/30 bg-primary-soft text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+              aria-label="Play Connections"
+              title="Play Connections"
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </button>
+          )}
           {authed && pendingCount > 0 && (
             <button
               type="button"
@@ -171,6 +184,15 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
                 className="w-full gap-2 border-accent/30 bg-accent-soft text-accent hover:bg-accent hover:text-accent-foreground"
               >
                 <Gamepad2 className="h-4 w-4" /> Mini game
+              </Button>
+            )}
+            {onStartConnectionGame && (
+              <Button
+                onClick={onStartConnectionGame}
+                variant="outline"
+                className="w-full gap-2 border-primary/30 bg-primary-soft text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <Grid3x3 className="h-4 w-4" /> Connections
               </Button>
             )}
             {authed && (
