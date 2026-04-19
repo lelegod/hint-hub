@@ -15,7 +15,7 @@ const FINAL_MCQ_OPTIONS = ["Paper 1", "Paper 2", "Paper 3", "Paper 4"];
 const FINAL_MCQ_CORRECT = 3; // Paper 4 (index 3)
 
 export function FinalAnswerBox({ session }: Props) {
-  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startConnectionGame, problemSummary, fullExtractedProblemText } = session;
+  const { finalAnswer, setFinalAnswer, submitFinal, status, finalEval, requestExtraHint, startMatchGame, problemSummary, fullExtractedProblemText } = session;
   const originalProblem = fullExtractedProblemText?.trim() || problemSummary?.trim() || "";
 
   const [mcqChoice, setMcqChoice] = useState<number | null>(null);
