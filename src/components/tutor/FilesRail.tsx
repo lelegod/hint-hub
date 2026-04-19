@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -177,15 +177,5 @@ export function FilesRail({ session }: Props) {
 }
 
 function CompactDropzone(props: React.ComponentProps<typeof FileDropzone>) {
-  const { current } = props;
-  return (
-    <div className="relative">
-      <FileDropzone {...props} />
-      {!current && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <Plus className="h-6 w-6 text-muted-foreground/40" />
-        </div>
-      )}
-    </div>
-  );
+  return <FileDropzone {...props} />;
 }
