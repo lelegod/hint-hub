@@ -489,6 +489,15 @@ function FriendsList({
                       <span className="truncate font-medium">{f.friend_name}</span>
                       {f.status_emoji && <span className="text-sm leading-none">{f.status_emoji}</span>}
                     </div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-primary-soft px-1.5 py-0.5 font-semibold text-primary">
+                        Lv {f.level ?? 1}
+                      </span>
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-accent-soft px-1.5 py-0.5 font-semibold text-accent">
+                        <Flame className="h-2.5 w-2.5" />
+                        {f.streak_days ?? 0}
+                      </span>
+                    </div>
                     <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
                   </div>
                 </li>
