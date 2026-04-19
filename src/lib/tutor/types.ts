@@ -51,6 +51,7 @@ export interface FinalEvaluation {
   correct: boolean;
   feedback: string;
   whereWentWrong: string;
+  masteryQuality?: "strong" | "partial";
 }
 
 export interface ConnectionGroup {

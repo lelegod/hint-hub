@@ -33,6 +33,9 @@ interface TutorPayload {
   studentReasoning?: string;
   // connection_game
   groupCount?: number;
+  // wording / leniency hints
+  paperCount?: number;
+  priorMastery?: number;
 }
 
 export function buildAttachments(files: UploadedFiles): AttachmentPayload[] {
