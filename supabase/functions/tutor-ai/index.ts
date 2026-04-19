@@ -37,6 +37,8 @@ interface Body {
   choices?: string[];
   correctIndex?: number;
   selectedIndex?: number;
+  // For connection_game
+  groupCount?: number;
 }
 
 // Fetch each attachment and convert to a data URL the AI gateway can consume.
