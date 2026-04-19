@@ -50,6 +50,25 @@ export function ConnectionGame({ groups, onRestart }: Props) {
     setMessage(null);
   }, [tiles]);
 
+  // Empty state — user has not learned enough topics yet (placed AFTER all hooks)
+  if (groups.length === 0) {
+    return (
+      <Card className="p-8 text-center shadow-soft animate-fade-in">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+          <Sparkles className="h-6 w-6" />
+        </div>
+        <h3 className="font-serif text-2xl text-foreground">Not enough topics yet</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          Learn a few topics first to unlock your personalized Connections game! Each topic
+          you practice grows your skill tree and feeds the puzzle.
+        </p>
+        <div className="mt-5 flex justify-center">
+          <Button onClick={onRestart}>Back</Button>
+        </div>
+      </Card>
+    );
+  }
+
   const toggle = (i: number) => {
     setMessage(null);
     setSelected((s) =>

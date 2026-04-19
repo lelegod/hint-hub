@@ -18,6 +18,7 @@ const Index = () => {
         onNewSession={session.resetSession}
         onOpenSession={session.loadSession}
         onStartMatchGame={session.startMatchGame}
+        onStartConnectionGame={session.startConnectionGame}
       />
 
       <main className="flex h-full flex-1 overflow-hidden">
@@ -27,7 +28,7 @@ const Index = () => {
               {session.connection ? (
                 <ConnectionGame
                   groups={session.connection.groups}
-                  onRestart={session.resetSession}
+                  onRestart={session.closeConnectionGame}
                 />
               ) : (
                 <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
