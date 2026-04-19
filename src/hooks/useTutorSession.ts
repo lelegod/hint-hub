@@ -601,6 +601,100 @@ export function useTutorSession() {
     setStatus(previousStatus === "match_game" ? "setup" : previousStatus);
   }, [previousStatus]);
 
+  // ----- Strands mini-game (sidebar) -----
+  const startStrandsGame = useCallback(async () => {
+    setErrorMsg(null);
+    setPreviousStatus(status);
+    setStatus("strands_game");
+    setStrands(null);
+
+    const learnedTopics = (game.skillNodes ?? [])
+      .slice()
+      .sort((a, b) => b.times_practiced - a.times_practiced)
+      .map((n) => n.topic)
+      .filter(Boolean);
+
+    if (learnedTopics.length === 0) {
+      setStrands({ theme: "", words: [] });
+      return;
+    }
+
+    // Pick one topic at random (or the only one)
+    const chosen =
+      learnedTopics.length === 1
+        ? learnedTopics[0]
+        : learnedTopics[Math.floor(Math.random() * learnedTopics.length)];
+
+    const topicsContext =
+      `The user has previously studied these topics in their account:\n` +
+      learnedTopics.map((t, i) => `${i + 1}. ${t}`).join("\n") +
+      `\n\nUse "${chosen}" as the puzzle theme. Generate 6-10 single-word concepts a learner of "${chosen}" would recognize.`;
+
+    try {
+      const result = await fetchStrandsGame({
+        problemSummary: topicsContext,
+        sourceSummary: "",
+        extraSummary: "",
+        previousHints: [],
+        attachments: [],
+      });
+      setStrands(result);
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Failed to load Strands");
+      setStatus(previousStatus);
+    }
+  }, [status, previousStatus, game.skillNodes]);
+
+  const closeStrandsGame = useCallback(() => {
+    setStrands(null);
+    setStatus(previousStatus === "strands_game" ? "setup" : previousStatus);
+  }, [previousStatus]);
+
+  // ----- Wordly mini-game (sidebar) -----
+  const startWordlyGame = useCallback(async () => {
+    setErrorMsg(null);
+    setPreviousStatus(status);
+    setStatus("wordly_game");
+    setWordly(null);
+
+    const streakDays = game.state?.streak_days ?? 0;
+    const learnedTopics = (game.skillNodes ?? [])
+      .slice()
+      .sort((a, b) => b.times_practiced - a.times_practiced)
+      .map((n) => n.topic)
+      .filter(Boolean);
+
+    // Locked or no topics — show empty/locked state without calling AI
+    if (streakDays < 15 || learnedTopics.length === 0) {
+      setWordly(null);
+      return;
+    }
+
+    const topicsContext =
+      `The user has previously studied these topics in their account:\n` +
+      learnedTopics.map((t, i) => `${i + 1}. ${t}`).join("\n") +
+      `\n\nPick a single 4-7 letter UPPERCASE word from any of these topics.`;
+
+    try {
+      const result = await fetchWordlyGame({
+        problemSummary: topicsContext,
+        sourceSummary: "",
+        extraSummary: "",
+        previousHints: [],
+        attachments: [],
+      });
+      setWordly(result);
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Failed to load Wordly");
+      setStatus(previousStatus);
+    }
+  }, [status, previousStatus, game.skillNodes, game.state?.streak_days]);
+
+  const closeWordlyGame = useCallback(() => {
+    setWordly(null);
+    setStatus(previousStatus === "wordly_game" ? "setup" : previousStatus);
+  }, [previousStatus]);
+
   // ----- Load an existing session from DB (resume or view) -----
   const loadSession = useCallback(async (id: string) => {
     setErrorMsg(null);
