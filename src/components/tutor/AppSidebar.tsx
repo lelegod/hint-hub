@@ -9,6 +9,7 @@ import {
   Flame,
   Gamepad2,
   Grid3x3,
+  Link2,
   History as HistoryIcon,
   LogIn,
   LogOut,
@@ -27,6 +28,12 @@ import { usePresence } from "@/hooks/usePresence";
 import { supabase } from "@/integrations/supabase/client";
 import { AddFriendDialog } from "@/components/friends/AddFriendDialog";
 import { StatusEditor } from "@/components/friends/StatusEditor";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { FriendUpdate, HistoryItem } from "@/lib/tutor/mockData";
 
 interface Props {
@@ -124,27 +131,31 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
           >
             <Plus className="h-4 w-4" />
           </Button>
-          {onStartMatchGame && (
-            <button
-              type="button"
-              onClick={onStartMatchGame}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-accent transition-colors hover:bg-accent hover:text-accent-foreground"
-              aria-label="Play mini game"
-              title="Play mini game"
-            >
-              <Gamepad2 className="h-4 w-4" />
-            </button>
-          )}
-          {onStartConnectionGame && (
-            <button
-              type="button"
-              onClick={onStartConnectionGame}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/30 bg-primary-soft text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-              aria-label="Play Connections"
-              title="Play Connections"
-            >
-              <Grid3x3 className="h-4 w-4" />
-            </button>
+          {(onStartMatchGame || onStartConnectionGame) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/30 bg-accent-soft text-accent transition-colors hover:bg-accent hover:text-accent-foreground"
+                  aria-label="Mini games"
+                  title="Mini games"
+                >
+                  <Gamepad2 className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start" className="w-44">
+                {onStartMatchGame && (
+                  <DropdownMenuItem onClick={onStartMatchGame} className="gap-2">
+                    <Link2 className="h-4 w-4" /> Matching
+                  </DropdownMenuItem>
+                )}
+                {onStartConnectionGame && (
+                  <DropdownMenuItem onClick={onStartConnectionGame} className="gap-2">
+                    <Grid3x3 className="h-4 w-4" /> Connections
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           {authed && pendingCount > 0 && (
             <button
@@ -177,23 +188,29 @@ export function AppSidebar({ history, friends, onNewSession, onOpenSession, onSt
         <>
           <div className="space-y-2 px-3 py-3">
             <Button onClick={onNewSession} className="w-full">New session</Button>
-            {onStartMatchGame && (
-              <Button
-                onClick={onStartMatchGame}
-                variant="outline"
-                className="w-full gap-2 border-accent/30 bg-accent-soft text-accent hover:bg-accent hover:text-accent-foreground"
-              >
-                <Gamepad2 className="h-4 w-4" /> Mini game
-              </Button>
-            )}
-            {onStartConnectionGame && (
-              <Button
-                onClick={onStartConnectionGame}
-                variant="outline"
-                className="w-full gap-2 border-primary/30 bg-primary-soft text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                <Grid3x3 className="h-4 w-4" /> Connections
-              </Button>
+            {(onStartMatchGame || onStartConnectionGame) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-accent/30 bg-accent-soft text-accent hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <Gamepad2 className="h-4 w-4" /> Mini games
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+                  {onStartMatchGame && (
+                    <DropdownMenuItem onClick={onStartMatchGame} className="gap-2">
+                      <Link2 className="h-4 w-4" /> Matching
+                    </DropdownMenuItem>
+                  )}
+                  {onStartConnectionGame && (
+                    <DropdownMenuItem onClick={onStartConnectionGame} className="gap-2">
+                      <Grid3x3 className="h-4 w-4" /> Connections
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             {authed && (
               <div className="flex items-center justify-between gap-2">
