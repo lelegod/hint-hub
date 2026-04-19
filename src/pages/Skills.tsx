@@ -54,28 +54,37 @@ export default function Skills() {
                   <span className="text-xs text-muted-foreground">({nodes.length})</span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {nodes.map((n) => (
-                    <div
-                      key={n.id}
-                      className={cn(
-                        "rounded-xl border p-3 transition-colors",
-                        n.mastery >= 80
-                          ? "border-success/40 bg-success-soft"
-                          : n.mastery >= 40
-                            ? "border-primary/30 bg-primary-soft/40"
-                            : "border-border bg-background",
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground">{n.topic}</span>
-                        <span className="text-xs text-muted-foreground">{n.mastery}%</span>
+                  {nodes.map((n) => {
+                    const isStrong = n.mastery >= 60;
+                    return (
+                      <div
+                        key={n.id}
+                        className={cn(
+                          "rounded-xl border p-3 transition-colors",
+                          n.mastery >= 80
+                            ? "border-success/40 bg-success-soft"
+                            : n.mastery >= 40
+                              ? "border-primary/30 bg-primary-soft/40"
+                              : "border-border bg-background",
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">{n.topic}</span>
+                          <span className="text-xs text-muted-foreground">{n.mastery}%</span>
+                        </div>
+                        <Progress value={n.mastery} className="mt-2 h-1.5" />
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-muted-foreground">
+                            Practiced {n.times_practiced}×
+                          </span>
+                          {/* Warm grey "partial" / "strong" tag */}
+                          <span className="text-[11px] font-medium" style={{ color: "hsl(30 12% 55%)" }}>
+                            {isStrong ? "strong skill" : "partial skill"}
+                          </span>
+                        </div>
                       </div>
-                      <Progress value={n.mastery} className="mt-2 h-1.5" />
-                      <div className="mt-1.5 text-[11px] text-muted-foreground">
-                        Practiced {n.times_practiced}×
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
