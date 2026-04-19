@@ -30,9 +30,9 @@ export function SetupScreen({ session }: Props) {
       <div className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-xl">
           <h1 className="text-center font-serif text-4xl leading-tight text-foreground sm:text-5xl">
-            Hey!
+            Welcome!
             <br />
-            <span className="text-muted-foreground">What should we learn today?</span>
+            <span className="text-muted-foreground">How can I support your learning today?</span>
           </h1>
 
           <form onSubmit={handleSubmit} className="mt-12">
