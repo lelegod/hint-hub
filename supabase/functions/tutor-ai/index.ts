@@ -326,8 +326,8 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       `Do not solve anything, do not summarize — extract the problem text faithfully.`;
   } else if (b.mode === "match_game") {
     userText =
-      `${ctx}\n\nHints from this session:\n${(b.previousHints ?? []).join("\n")}\n\n` +
-      `Generate 6 matching pairs drawn from the concepts in this session. ` +
+      `${ctx}\n\n` +
+      `Generate 6 matching pairs grounded ONLY in the user's previously learned topics listed above. Do NOT invent topics outside that list. Spread the pairs across several of the listed topics when possible. ` +
       `Each pair is either (a) a term and its concise definition/description, or (b) two synonyms. ` +
       `Mix both kinds. Keep left items short (1-4 words) and right items concise (max ~12 words). ` +
       `Make pairs unambiguous so each left has exactly one correct right.`;

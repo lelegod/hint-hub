@@ -486,25 +486,46 @@ export function useTutorSession() {
   }, [problemSummary, sourceSummary, extraSummary, hints, files]);
 
   // ----- Match mini-game (sidebar tab) -----
+  // Pulls ONLY from topics the user has actually practiced (skill_nodes).
   const startMatchGame = useCallback(async () => {
     setErrorMsg(null);
     setPreviousStatus(status);
     setStatus("match_game");
     setMatch(null);
+
+    // Build the list of learned topics from gamification skill tree
+    const learnedTopics = (game.skillNodes ?? [])
+      .slice()
+      .sort((a, b) => b.times_practiced - a.times_practiced)
+      .map((n) => n.topic)
+      .filter(Boolean);
+
+    // No learned topics — show empty state, do NOT call the AI
+    if (learnedTopics.length === 0) {
+      setMatch({ pairs: [] });
+      return;
+    }
+
+    const topicsContext =
+      `The user has previously studied these topics in their account:\n` +
+      learnedTopics.map((t, i) => `${i + 1}. ${t}`).join("\n") +
+      `\n\nGenerate the matching pairs ONLY from these topics. ` +
+      `Do not invent unrelated subjects.`;
+
     try {
       const result = await fetchMatchGame({
-        problemSummary,
-        sourceSummary,
-        extraSummary,
-        previousHints: hints.map((h) => h.challenge.hint),
-        attachments: buildAttachments(files),
+        problemSummary: topicsContext,
+        sourceSummary: "",
+        extraSummary: "",
+        previousHints: [],
+        attachments: [],
       });
       setMatch(result);
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to load match game");
       setStatus(previousStatus);
     }
-  }, [problemSummary, sourceSummary, extraSummary, hints, files, status, previousStatus]);
+  }, [status, previousStatus, game.skillNodes]);
 
   const closeMatchGame = useCallback(() => {
     setMatch(null);
