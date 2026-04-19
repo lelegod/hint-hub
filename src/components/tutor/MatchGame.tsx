@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { MatchPair } from "@/lib/tutor/types";
+import { RichText } from "./RichText";
 
 interface Props {
   pairs?: MatchPair[];
@@ -150,7 +151,7 @@ export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
                 >
                   <div className="flex items-center gap-2">
                     {isMatched && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                    <span className="font-medium">{item.text}</span>
+                    <RichText className="text-sm font-medium [&_p]:m-0">{item.text}</RichText>
                   </div>
                 </button>
               );
@@ -171,7 +172,7 @@ export function MatchGame({ pairs, onRestart, onPlayAgain }: Props) {
                 >
                   <div className="flex items-start gap-2">
                     {isMatched && <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />}
-                    <span>{item.text}</span>
+                    <RichText className="text-sm [&_p]:m-0">{item.text}</RichText>
                   </div>
                 </button>
               );
