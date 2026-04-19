@@ -841,6 +841,8 @@ export function useTutorSession() {
     setFinalEval(null);
     setConnection(null);
     setMatch(null);
+    setStrands(null);
+    setWordly(null);
     setErrorMsg(null);
     setSessionRowId(null);
     setFullExtractedProblemText("");
@@ -888,6 +890,14 @@ export function useTutorSession() {
     match,
     startMatchGame,
     closeMatchGame,
+    // strands mini-game
+    strands,
+    startStrandsGame,
+    closeStrandsGame,
+    // wordly mini-game
+    wordly,
+    startWordlyGame,
+    closeWordlyGame,
     // sidebar — now from real DB
     history: sessionsHook.history,
     friends: sessionsHook.friends,
