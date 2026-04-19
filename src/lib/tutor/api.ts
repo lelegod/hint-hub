@@ -6,6 +6,8 @@ import type {
   UploadedFiles,
   ReasoningEvaluation,
   MatchPair,
+  StrandsPuzzle,
+  WordlyPuzzle,
 } from "./types";
 
 interface AttachmentPayload {
@@ -15,7 +17,15 @@ interface AttachmentPayload {
 }
 
 interface TutorPayload {
-  mode: "hint" | "evaluate_final" | "connection_game" | "evaluate_reasoning" | "extract_problem" | "match_game";
+  mode:
+    | "hint"
+    | "evaluate_final"
+    | "connection_game"
+    | "evaluate_reasoning"
+    | "extract_problem"
+    | "match_game"
+    | "strands_game"
+    | "wordly_game";
   problemSummary?: string;
   sourceSummary?: string;
   extraSummary?: string;
@@ -24,16 +34,13 @@ interface TutorPayload {
   previousHints?: string[];
   finalAnswer?: string;
   attachments?: AttachmentPayload[];
-  // evaluate_reasoning
   hintText?: string;
   microChallenge?: string;
   choices?: string[];
   correctIndex?: number;
   selectedIndex?: number;
   studentReasoning?: string;
-  // connection_game
   groupCount?: number;
-  // wording / leniency hints
   paperCount?: number;
   priorMastery?: number;
 }
@@ -73,3 +80,9 @@ export const extractProblemFromFiles = (p: Omit<TutorPayload, "mode">) =>
 
 export const fetchMatchGame = (p: Omit<TutorPayload, "mode">) =>
   callTutor<{ pairs: MatchPair[] }>({ ...p, mode: "match_game" });
+
+export const fetchStrandsGame = (p: Omit<TutorPayload, "mode">) =>
+  callTutor<StrandsPuzzle>({ ...p, mode: "strands_game" });
+
+export const fetchWordlyGame = (p: Omit<TutorPayload, "mode">) =>
+  callTutor<WordlyPuzzle>({ ...p, mode: "wordly_game" });

@@ -424,6 +424,18 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
       `Each pair is either (a) a term and its concise definition/description, or (b) two synonyms. ` +
       `Mix both kinds. Keep left items short (1-4 words) and right items concise (max ~12 words). ` +
       `Make pairs unambiguous so each left has exactly one correct right.`;
+  } else if (b.mode === "strands_game") {
+    userText =
+      `${ctx}\n\n` +
+      `Pick ONE theme from the user's learned topics listed above (use the topic name verbatim) and generate 6-10 single-word concepts that belong to that topic. ` +
+      `Words must be UPPERCASE A-Z only, 3-9 letters, no spaces, no hyphens, no numbers, no punctuation. ` +
+      `Words must be real concepts a learner of this topic would recognize. No random vocabulary.`;
+  } else if (b.mode === "wordly_game") {
+    userText =
+      `${ctx}\n\n` +
+      `Pick ONE secret word from the user's learned topics listed above. ` +
+      `The word must be a real concept the student studied, 4-7 letters, UPPERCASE A-Z only, no spaces or punctuation. ` +
+      `Provide a short clue (max 12 words) that hints at the meaning without spelling out the word.`;
   } else {
     const groupCount = b.groupCount ?? 4;
     userText =
@@ -454,6 +466,8 @@ function toolFor(mode: Mode) {
   if (mode === "evaluate_reasoning") return REASONING_TOOL;
   if (mode === "extract_problem") return EXTRACT_TOOL;
   if (mode === "match_game") return MATCH_TOOL;
+  if (mode === "strands_game") return STRANDS_TOOL;
+  if (mode === "wordly_game") return WORDLY_TOOL;
   return CONN_TOOL;
 }
 
