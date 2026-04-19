@@ -328,6 +328,8 @@ const WORDLY_TOOL = {
     },
   },
 };
+
+function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dataUrl: string }>) {
   const hasFiles = loaded.length > 0;
   const paperCount = b.paperCount ?? loaded.length;
   const sourceTermSingular = paperCount <= 1 ? "section" : "paper";
