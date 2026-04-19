@@ -246,10 +246,7 @@ export function StrandsGame({ puzzle, onRestart, onPlayAgain }: Props) {
             <Sparkles className="h-4 w-4" />
             Strands
           </div>
-          <h3 className="mt-1 font-serif text-2xl text-foreground">{puzzle.theme}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Drag (or tap then re-tap) to trace hidden words from this topic. Words run in any direction.
-          </p>
+          <h3 className="mt-1 font-serif text-2xl capitalize text-foreground">{puzzle.theme}</h3>
         </div>
         <Button variant="ghost" size="sm" onClick={onRestart} className="gap-2">
           <RefreshCw className="h-4 w-4" /> Close

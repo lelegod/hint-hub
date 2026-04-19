@@ -296,7 +296,7 @@ const STRANDS_TOOL = {
     parameters: {
       type: "object",
       properties: {
-        theme: { type: "string", description: "The topic name used as the puzzle theme — must be one of the learned topics provided." },
+        theme: { type: "string", description: "A 1-2 word academic topic label (e.g. 'Algebra', 'Differentiation', 'Cellular Biology'). Must be derived from one of the learned topics. NEVER a sentence or question." },
         words: {
           type: "array",
           minItems: 6,
@@ -427,7 +427,8 @@ function buildMessages(b: Body, loaded: Array<{ label: string; mime: string; dat
   } else if (b.mode === "strands_game") {
     userText =
       `${ctx}\n\n` +
-      `Pick ONE theme from the user's learned topics listed above (use the topic name verbatim) and generate 6-10 single-word concepts that belong to that topic. ` +
+      `Pick ONE theme from the user's learned topics listed above and condense it into a SHORT 1-2 word academic topic label (e.g. "Algebra", "Differentiation", "Cellular Biology", "Fractions", "Forces"). The theme MUST NOT be a full sentence or question — just the bare academic subject name. ` +
+      `Then generate 6-10 single-word concepts that belong to that topic. ` +
       `Words must be UPPERCASE A-Z only, 3-9 letters, no spaces, no hyphens, no numbers, no punctuation. ` +
       `Words must be real concepts a learner of this topic would recognize. No random vocabulary.`;
   } else if (b.mode === "wordly_game") {
