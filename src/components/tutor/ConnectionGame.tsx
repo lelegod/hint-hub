@@ -115,12 +115,12 @@ export function ConnectionGame({ groups, onRestart }: Props) {
 
       {solved.length > 0 && (
         <div className="mb-4 space-y-2">
-          {solved.map((g, i) => (
+          {solved.map((g) => (
             <div
               key={g.theme}
               className={cn(
                 "rounded-md border p-3 text-sm animate-pop-in",
-                PALETTE[i % PALETTE.length],
+                SOLVED_STYLE,
               )}
             >
               <div className="flex items-center gap-2 font-semibold">
