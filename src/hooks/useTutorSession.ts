@@ -8,8 +8,10 @@ import type {
   MatchPair,
   MicroChallenge,
   SessionStatus,
+  StrandsPuzzle,
   UploadedFileMeta,
   UploadedFiles,
+  WordlyPuzzle,
 } from "@/lib/tutor/types";
 import {
   buildAttachments,
@@ -18,6 +20,8 @@ import {
   extractProblemFromFiles,
   fetchConnectionGame,
   fetchMatchGame,
+  fetchStrandsGame,
+  fetchWordlyGame,
   requestHint,
 } from "@/lib/tutor/api";
 import { useGamification } from "@/hooks/useGamification";
@@ -123,6 +127,10 @@ export function useTutorSession() {
 
   // Match mini-game
   const [match, setMatch] = useState<{ pairs: MatchPair[] } | null>(null);
+  // Strands mini-game
+  const [strands, setStrands] = useState<StrandsPuzzle | null>(null);
+  // Wordly mini-game
+  const [wordly, setWordly] = useState<WordlyPuzzle | null>(null);
   const [previousStatus, setPreviousStatus] = useState<SessionStatus>("setup");
 
   // Re-fetch sessions list when this session completes
