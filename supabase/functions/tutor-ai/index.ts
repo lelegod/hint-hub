@@ -123,14 +123,24 @@ const EVAL_TOOL = {
     parameters: {
       type: "object",
       properties: {
-        correct: { type: "boolean" },
+        correct: {
+          type: "boolean",
+          description:
+            "Whether the answer is good enough to complete the session. If priorMastery is HIGH (the student already knows this topic) and the topic is relatively easy, accept partial-but-mostly-correct answers as 'correct: true' so the session can end and the student earns at least a partial skill. If priorMastery is LOW or the topic is hard, require accurate answers.",
+        },
+        masteryQuality: {
+          type: "string",
+          enum: ["strong", "partial"],
+          description:
+            "Only meaningful when correct=true. 'strong' = the student fully understood and answered accurately. 'partial' = the answer was acceptable but had gaps, vagueness, or small errors — they should earn a partial skill, not a strong one.",
+        },
         feedback: { type: "string", description: "Encouraging, specific feedback" },
         whereWentWrong: {
           type: "string",
           description: "If incorrect, gentle explanation of the misstep, otherwise empty",
         },
       },
-      required: ["correct", "feedback", "whereWentWrong"],
+      required: ["correct", "masteryQuality", "feedback", "whereWentWrong"],
       additionalProperties: false,
     },
   },
