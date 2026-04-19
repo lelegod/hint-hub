@@ -161,6 +161,25 @@ export function useTutorSession() {
     [],
   );
 
+  // Helpers to compute paperCount + priorMastery for a session
+  const computePaperCount = useCallback((f: UploadedFiles) => {
+    let n = 0;
+    if (f.problemPdf) n++;
+    if (f.sourceMaterial) n++;
+    if (f.extraFile) n++;
+    return n;
+  }, []);
+
+  const getPriorMastery = useCallback(
+    (topic: string): number => {
+      const t = topic.trim().toLowerCase();
+      if (!t) return 0;
+      const node = (game.skillNodes ?? []).find((n) => n.topic.toLowerCase() === t);
+      return node?.mastery ?? 0;
+    },
+    [game.skillNodes],
+  );
+
   // ----- Session start -----
   const startSession = useCallback(async () => {
     setErrorMsg(null);
@@ -169,7 +188,7 @@ export function useTutorSession() {
       return;
     }
     void game.touchStreak();
-    void game.practiceTopic(problemSummary.slice(0, 40));
+    // Note: practiceTopic is called on session completion with the actual quality
 
     setStatus("active_hint");
     setHints([]);
@@ -228,12 +247,14 @@ export function useTutorSession() {
 
     // 2. If a problem file was uploaded, AI-extract the full problem text in parallel with first hint
     const attachments = buildAttachments(files);
+    const paperCount = computePaperCount(files);
     const extractPromise = files.problemPdf
       ? extractProblemFromFiles({
           problemSummary,
           sourceSummary,
           extraSummary,
           attachments,
+          paperCount,
         }).catch((e) => {
           console.error("extract_problem failed", e);
           return null;
@@ -250,6 +271,7 @@ export function useTutorSession() {
           hintIndex: 0,
           previousHints: [],
           attachments,
+          paperCount,
         }),
         extractPromise,
       ]);
@@ -277,7 +299,7 @@ export function useTutorSession() {
     } finally {
       setLoadingHint(false);
     }
-  }, [problemSummary, sourceSummary, extraSummary, totalHints, files, game]);
+  }, [problemSummary, sourceSummary, extraSummary, totalHints, files, game, computePaperCount]);
 
   // ----- Action box mutations -----
   const selectChoice = useCallback((entryId: string, idx: number) => {
