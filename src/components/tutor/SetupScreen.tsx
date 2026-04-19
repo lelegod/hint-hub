@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,6 @@ interface Props {
 export function SetupScreen({ session }: Props) {
   const [filesOpen, setFilesOpen] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const canStart = session.problemSummary.trim().length > 0;
 
@@ -24,18 +23,6 @@ export function SetupScreen({ session }: Props) {
     e.preventDefault();
     if (canStart) session.startSession();
   };
-
-  // Auto-grow up to ~3 lines, then scroll
-  useEffect(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    ta.style.height = "auto";
-    // line-height ~24px (text-base, leading-normal); 3 lines + padding ≈ 96px
-    const maxHeight = 96;
-    const next = Math.min(ta.scrollHeight, maxHeight);
-    ta.style.height = `${next}px`;
-    ta.style.overflowY = ta.scrollHeight > maxHeight ? "auto" : "hidden";
-  }, [session.problemSummary]);
 
   return (
     <div className="relative flex h-full w-full animate-fade-in">
@@ -45,36 +32,29 @@ export function SetupScreen({ session }: Props) {
           <h1 className="text-center font-serif text-4xl leading-tight text-foreground sm:text-5xl">
             Welcome!
             <br />
-            <span className="text-muted-foreground">How can I support your learning today?</span>
+            <span className="text-muted-foreground"> How can I support your learning today?</span>
           </h1>
 
           <form onSubmit={handleSubmit} className="mt-12">
             <div
               className={cn(
-                "group relative flex items-end rounded-3xl border border-border bg-card pl-6 pr-2 py-2 shadow-soft transition-all",
+                "group relative flex items-center rounded-full border border-border bg-card pl-6 pr-2 shadow-soft transition-all",
                 "focus-within:border-primary/60 focus-within:shadow-elevated",
               )}
             >
-              <textarea
-                ref={textareaRef}
+              <input
+                type="text"
                 placeholder="write here"
                 value={session.problemSummary}
                 onChange={(e) => session.setProblemSummary(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    if (canStart) session.startSession();
-                  }
-                }}
-                rows={1}
-                className="flex-1 resize-none bg-transparent py-2 text-base leading-normal text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                className="flex-1 bg-transparent py-4 text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
                 autoFocus
               />
               <Button
                 type="submit"
                 size="icon"
                 disabled={!canStart}
-                className="mb-1 h-10 w-10 shrink-0 self-end rounded-full"
+                className="h-10 w-10 shrink-0 rounded-full"
                 aria-label="Start learning"
               >
                 <ArrowRight className="h-4 w-4" />
