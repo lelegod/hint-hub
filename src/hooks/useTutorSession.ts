@@ -903,6 +903,10 @@ export function useTutorSession() {
     friends: sessionsHook.friends,
     resetSession,
     loadSession,
+    deleteSession: async (id: string) => {
+      await sessionsHook.deleteSession(id);
+      if (sessionRowId === id) resetSession();
+    },
   };
 }
 
