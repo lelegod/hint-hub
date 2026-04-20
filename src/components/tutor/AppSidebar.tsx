@@ -303,7 +303,7 @@ export function AppSidebar({
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-3">
-            {tab === "history" && <HistoryList history={history} onOpen={onOpenSession} />}
+            {tab === "history" && <HistoryList history={history} onOpen={onOpenSession} onDelete={onDeleteSession} />}
             {tab === "friends" && (
               <div className="space-y-4">
                 {authed && (
