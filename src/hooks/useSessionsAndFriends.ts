@@ -147,5 +147,22 @@ export function useSessionsAndFriends() {
     timeAgo: timeAgo(a.created_at),
   }));
 
-  return { authed, userId, history, friends, loading, refresh };
+  const deleteSession = useCallback(
+    async (id: string) => {
+      // Optimistic UI update
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      // Remove dependent rows first (no FK cascade defined for hint_entries)
+      await supabase.from("hint_entries").delete().eq("session_id", id);
+      await supabase.from("activity_events").delete().eq("session_id", id);
+      const { error } = await supabase.from("tutor_sessions").delete().eq("id", id);
+      if (error) {
+        // Rollback on failure
+        await refresh();
+        throw error;
+      }
+    },
+    [refresh],
+  );
+
+  return { authed, userId, history, friends, loading, refresh, deleteSession };
 }
