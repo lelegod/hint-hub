@@ -17,6 +17,7 @@ import {
   Plus,
   Search,
   Sparkles,
+  Trash2,
   Type,
   UserPlus,
   Users,
