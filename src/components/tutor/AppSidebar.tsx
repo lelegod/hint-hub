@@ -45,6 +45,7 @@ interface Props {
   friends: FriendUpdate[];
   onNewSession: () => void;
   onOpenSession: (id: string) => void;
+  onDeleteSession?: (id: string) => Promise<void> | void;
   onStartMatchGame?: () => void;
   onStartConnectionGame?: () => void;
   onStartStrandsGame?: () => void;
@@ -58,6 +59,7 @@ export function AppSidebar({
   friends,
   onNewSession,
   onOpenSession,
+  onDeleteSession,
   onStartMatchGame,
   onStartConnectionGame,
   onStartStrandsGame,
