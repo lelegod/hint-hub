@@ -64,13 +64,20 @@ export function useSessionsAndFriends() {
         .select("id,user_id,type,message,created_at")
         .neq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(30),
+        .limit(100),
     ]);
 
     if (sessRes.data) setSessions(sessRes.data as SessionRow[]);
 
     if (actRes.data && actRes.data.length > 0) {
-      const ids = Array.from(new Set(actRes.data.map((a) => a.user_id)));
+      // Keep only the latest activity per friend (rows are already sorted desc)
+      const seen = new Set<string>();
+      const latestPerUser = actRes.data.filter((a) => {
+        if (seen.has(a.user_id)) return false;
+        seen.add(a.user_id);
+        return true;
+      });
+      const ids = Array.from(seen);
       const { data: profs } = await supabase
         .from("profiles")
         .select("user_id,display_name")
@@ -79,7 +86,7 @@ export function useSessionsAndFriends() {
         (profs ?? []).map((p) => [p.user_id, p.display_name]),
       );
       setActivity(
-        actRes.data.map((a) => ({
+        latestPerUser.map((a) => ({
           ...a,
           display_name: nameById.get(a.user_id) ?? null,
         })) as ActivityRow[],
@@ -140,5 +147,22 @@ export function useSessionsAndFriends() {
     timeAgo: timeAgo(a.created_at),
   }));
 
-  return { authed, userId, history, friends, loading, refresh };
+  const deleteSession = useCallback(
+    async (id: string) => {
+      // Optimistic UI update
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      // Remove dependent rows first (no FK cascade defined for hint_entries)
+      await supabase.from("hint_entries").delete().eq("session_id", id);
+      await supabase.from("activity_events").delete().eq("session_id", id);
+      const { error } = await supabase.from("tutor_sessions").delete().eq("id", id);
+      if (error) {
+        // Rollback on failure
+        await refresh();
+        throw error;
+      }
+    },
+    [refresh],
+  );
+
+  return { authed, userId, history, friends, loading, refresh, deleteSession };
 }

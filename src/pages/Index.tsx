@@ -23,6 +23,7 @@ const Index = () => {
         friends={session.friends}
         onNewSession={session.resetSession}
         onOpenSession={session.loadSession}
+        onDeleteSession={session.deleteSession}
         onStartMatchGame={session.startMatchGame}
         onStartConnectionGame={session.startConnectionGame}
         onStartStrandsGame={session.startStrandsGame}
